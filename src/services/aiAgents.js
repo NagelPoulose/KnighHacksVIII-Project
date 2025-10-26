@@ -21,11 +21,27 @@ class PatternAnalysisAgent {
         4. Gap analysis in current offerings
         5. Priority recommendations for new accelerators
         
-        Format your response as a structured JSON object with clear categories and insights.
+        Format your response as a JSON object with these exact keys:
+        {
+            "emergingNeeds": ["need1", "need2", "need3", "need4", "need5"],
+            "patterns": ["pattern1", "pattern2", "pattern3", "pattern4", "pattern5"],
+            "trends": ["trend1", "trend2", "trend3", "trend4", "trend5"],
+            "gaps": ["gap1", "gap2", "gap3", "gap4", "gap5"],
+            "recommendations": ["rec1", "rec2", "rec3", "rec4", "rec5"]
+        }
       `;
 
+            console.log('🔍 Pattern Analysis Agent - Starting analysis...');
+            console.log('📊 Customer Data:', customerData);
             const response = await this.callGoogleAI(prompt);
-            return this.parseResponse(response);
+            console.log('🤖 Pattern Analysis Agent - Raw response:', response);
+            
+            const parsed = this.parseResponse(response);
+            console.log('✅ Pattern Analysis Agent - Parsed response:', parsed);
+            console.log('📋 Emerging Needs:', parsed.emergingNeeds);
+            console.log('🔍 Patterns:', parsed.patterns);
+            
+            return parsed;
         } catch (error) {
             console.error('Pattern Analysis Error:', error);
             // Return mock analysis if API fails
@@ -95,17 +111,20 @@ class PatternAnalysisAgent {
 
     parseResponse(response) {
         try {
-            console.log('Parsing AI response:', response);
+            console.log('🔍 Parsing AI response:', response);
 
             // Try to extract JSON from the response
             const jsonMatch = response.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
-                console.log('Successfully parsed JSON response:', parsed);
+                const jsonStr = jsonMatch[0];
+                console.log('📄 Extracted JSON string:', jsonStr);
+                const parsed = JSON.parse(jsonStr);
+                console.log('✅ Successfully parsed JSON response:', parsed);
                 return parsed;
             }
 
             // Fallback to structured text parsing
+            console.log('⚠️ No JSON found, using text parsing fallback');
             const parsed = {
                 emergingNeeds: this.extractList(response, 'emerging needs'),
                 patterns: this.extractList(response, 'patterns'),
@@ -114,10 +133,10 @@ class PatternAnalysisAgent {
                 recommendations: this.extractList(response, 'recommendations'),
                 rawResponse: response
             };
-            console.log('Parsed structured text response:', parsed);
+            console.log('📝 Parsed structured text response:', parsed);
             return parsed;
         } catch (error) {
-            console.error('Error parsing response:', error);
+            console.error('❌ Error parsing response:', error);
             return {
                 rawResponse: response,
                 error: 'Failed to parse structured response: ' + error.message
