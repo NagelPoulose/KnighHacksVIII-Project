@@ -189,22 +189,6 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                     </motion.div>
                 )}
 
-                {/* Raw Analysis (if available) */}
-                {analysis.rawResponse && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="card-modern rounded-xl p-6"
-                    >
-                        <h3 className="text-xl font-semibold text-primary mb-4">Detailed Analysis</h3>
-                        <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto border border-gray-200">
-                            <pre className="text-secondary text-sm whitespace-pre-wrap">
-                                {analysis.rawResponse}
-                            </pre>
-                        </div>
-                    </motion.div>
-                )}
             </div>
         );
     };
