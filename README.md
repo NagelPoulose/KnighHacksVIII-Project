@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ServiceNow AI Accelerator Hub
 
 A sophisticated AI-powered platform for analyzing customer needs and recommending new ServiceNow accelerators. Built for the ServiceNow hackathon with two specialized AI agents and a beautiful React interface.
@@ -135,3 +136,6 @@ AIzaSyDuCk1PkdQ2Jbdd7LAxP1xb6qDH-RHh8mQ
 ## 📝 License
 
 Built for ServiceNow Hackathon 2024
+=======
+# KnighHacksVIII-Project
+>>>>>>> ea69c539df65231a82142c630d42b59f370949d3
