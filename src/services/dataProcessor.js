@@ -127,6 +127,8 @@ class DataProcessor {
     }
 
     getAnalyticsData(processedData) {
+        console.log('📊 Processing analytics for data:', processedData.length, 'items');
+
         const analytics = {
             totalRequests: processedData.length,
             byCategory: this.groupBy(processedData, 'category'),
@@ -136,6 +138,11 @@ class DataProcessor {
             topTags: this.getTopTags(processedData),
             trendData: this.getTrendData(processedData)
         };
+
+        console.log('📈 Generated analytics:', analytics);
+        console.log('🏷️ Top tags:', analytics.topTags);
+        console.log('📊 Categories:', analytics.byCategory);
+        console.log('😊 Sentiment:', analytics.bySentiment);
 
         return analytics;
     }

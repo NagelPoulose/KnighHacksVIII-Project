@@ -26,40 +26,42 @@ const Dashboard = ({ data, analytics }) => {
 
     const stats = [
         {
-            title: 'Total Requests',
+            title: 'Total Customer Requests',
             value: analytics.totalRequests,
             icon: Users,
             color: 'blue',
-            change: '+12%'
+            change: `${analytics.totalRequests > 0 ? 'Active' : 'No Data'}`
         },
         {
-            title: 'Active Accelerators',
+            title: 'Available Accelerators',
             value: data.accelerators.length,
             icon: Target,
             color: 'green',
-            change: '+5%'
+            change: `${data.accelerators.length} in Portfolio`
         },
         {
-            title: 'Patterns Identified',
+            title: 'Request Categories',
             value: Object.keys(analytics.byCategory).length,
             icon: BarChart3,
             color: 'purple',
-            change: '+8%'
+            change: `${Object.keys(analytics.byCategory).length} Categories`
         },
         {
-            title: 'AI Insights',
+            title: 'Top Tags Identified',
             value: analytics.topTags.length,
             icon: Lightbulb,
             color: 'orange',
-            change: '+15%'
+            change: `${analytics.topTags.length} Tags`
         }
     ];
 
-    const categoryData = Object.entries(analytics.byCategory).map(([category, count]) => ({
-        category,
-        count,
-        percentage: ((count / analytics.totalRequests) * 100).toFixed(1)
-    }));
+    const categoryData = Object.entries(analytics.byCategory)
+        .sort(([,a], [,b]) => b - a)
+        .map(([category, count]) => ({
+            category: category || 'Uncategorized',
+            count,
+            percentage: ((count / analytics.totalRequests) * 100).toFixed(1)
+        }));
 
     const sentimentData = Object.entries(analytics.bySentiment).map(([sentiment, count]) => ({
         sentiment,
@@ -163,11 +165,11 @@ const Dashboard = ({ data, analytics }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="glass-effect rounded-xl p-6"
+                    className="card-modern rounded-xl p-6"
                 >
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-white">Sentiment Analysis</h3>
-                        <Activity className="h-5 w-5 text-green-400" />
+                        <h3 className="text-xl font-semibold text-primary">Sentiment Analysis</h3>
+                        <Activity className="h-5 w-5 text-green-600" />
                     </div>
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
@@ -204,11 +206,11 @@ const Dashboard = ({ data, analytics }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="glass-effect rounded-xl p-6"
+                className="card-modern rounded-xl p-6"
             >
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-white">Top Request Tags</h3>
-                    <Zap className="h-5 w-5 text-yellow-400" />
+                    <h3 className="text-xl font-semibold text-primary">Top Request Tags</h3>
+                    <Zap className="h-5 w-5 text-yellow-500" />
                 </div>
                 <div className="flex flex-wrap gap-3">
                     {analytics.topTags.map((tag, index) => (
@@ -217,7 +219,7 @@ const Dashboard = ({ data, analytics }) => {
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.5 + index * 0.1 }}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full text-sm text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-200"
+                            className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-full text-sm text-primary hover:bg-gray-200 transition-all duration-200"
                         >
                             {tag.tag} ({tag.count})
                         </motion.span>

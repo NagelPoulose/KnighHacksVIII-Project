@@ -164,7 +164,7 @@ class AcceleratorRecommendationAgent {
             console.log('💡 Accelerator Recommendation Agent - Starting recommendations...');
             console.log('📊 Pattern Analysis Input:', patternAnalysis);
             console.log('🏢 Existing Accelerators:', existingAccelerators.slice(0, 5));
-            
+
             const prompt = `
         As a ServiceNow Accelerator Recommendation Agent, based on the pattern analysis provided, recommend new accelerators for the ServiceNow portfolio.
         
@@ -197,10 +197,10 @@ class AcceleratorRecommendationAgent {
             console.log('🤖 Sending recommendation request to AI...');
             const response = await this.callGoogleAI(prompt);
             console.log('📄 Raw recommendation response:', response);
-            
+
             const parsed = this.parseRecommendations(response);
             console.log('✅ Parsed recommendations:', parsed);
-            
+
             return parsed;
         } catch (error) {
             console.error('❌ Accelerator Recommendation Error:', error);
@@ -269,7 +269,7 @@ class AcceleratorRecommendationAgent {
     parseRecommendations(response) {
         try {
             console.log('🔍 Parsing recommendation response:', response);
-            
+
             const jsonMatch = response.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 const jsonStr = jsonMatch[0];
