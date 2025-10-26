@@ -192,10 +192,7 @@ IMPORTANT: Return ONLY valid JSON. Include ONLY top 3 per category in evaluatedA
                 });
             }
             
-            // 6 second delay = 10 requests per minute (at 10 RPM limit)
-            if (i + 1 < requests.length) {
-                await new Promise(resolve => setTimeout(resolve, 6000));
-            }
+            // No delay - process as fast as API allows (higher quota key)
         }
         
         return results;

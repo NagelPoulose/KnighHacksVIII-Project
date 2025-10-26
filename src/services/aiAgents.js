@@ -15,41 +15,22 @@ class PatternAnalysisAgent {
             const prompt = `
         As a ServiceNow Pattern Analysis Agent, analyze the following customer data to identify emerging needs and patterns:
         
-        Customer Data Summary:
-        - Total Requests: ${customerData.summary.totalRequests}
-        - Top Categories: ${customerData.summary.topCategories.join(', ')}
-        - Common Tags: ${customerData.summary.commonTags.map(t => t.tag).join(', ')}
-        - Sentiment Distribution: ${JSON.stringify(customerData.summary.sentimentDistribution)}
+        Customer Data: ${JSON.stringify(customerData, null, 2)}
         
-        Sample Requests: ${JSON.stringify(customerData.customerRequests.slice(0, 30), null, 2)}
-        
-        Please provide a comprehensive analysis with confidence scores (0-100):
-        1. Top 5 emerging customer needs with confidence scores
-        2. Pattern analysis of common pain points with frequency metrics
-        3. Trend analysis with directional indicators
-        4. Gap analysis in current offerings with severity ratings
-        5. Priority recommendations with urgency levels
+        Please provide:
+        1. Top 5 emerging customer needs
+        2. Pattern analysis of common pain points
+        3. Trend analysis of customer requests
+        4. Gap analysis in current offerings
+        5. Priority recommendations for new accelerators
         
         Format your response as a JSON object with these exact keys:
         {
-            "emergingNeeds": [
-                {"need": "description", "confidence": 85, "frequency": 45, "category": "automation"}
-            ],
-            "patterns": [
-                {"pattern": "description", "confidence": 90, "occurrences": 32, "impact": "high"}
-            ],
-            "trends": [
-                {"trend": "description", "direction": "increasing", "strength": 80, "timeframe": "3-6 months"}
-            ],
-            "gaps": [
-                {"gap": "description", "severity": "high", "affectedCustomers": 25, "confidence": 85}
-            ],
-            "recommendations": [
-                {"recommendation": "description", "priority": "high", "confidence": 88, "expectedImpact": "high"}
-            ],
-            "overallConfidence": 85,
-            "dataQuality": "high",
-            "sampleSize": 100
+            "emergingNeeds": ["need1", "need2", "need3", "need4", "need5"],
+            "patterns": ["pattern1", "pattern2", "pattern3", "pattern4", "pattern5"],
+            "trends": ["trend1", "trend2", "trend3", "trend4", "trend5"],
+            "gaps": ["gap1", "gap2", "gap3", "gap4", "gap5"],
+            "recommendations": ["rec1", "rec2", "rec3", "rec4", "rec5"]
         }
       `;
 
@@ -58,17 +39,7 @@ class PatternAnalysisAgent {
             const response = await this.callGoogleAI(prompt);
             console.log('🤖 Pattern Analysis Agent - Raw response:', response);
 
-            const parsed = this.parseResponse(response, customerData);
-            
-            // Add performance metrics
-            const processingTime = Date.now() - startTime;
-            parsed.metrics = {
-                processingTime,
-                dataPointsAnalyzed: customerData.customerRequests.length,
-                analysisDate: new Date().toISOString(),
-                agentVersion: '2.0'
-            };
-            
+            const parsed = this.parseResponse(response);
             console.log('✅ Pattern Analysis Agent - Parsed response:', parsed);
             console.log('📋 Emerging Needs:', parsed.emergingNeeds);
             console.log('🔍 Patterns:', parsed.patterns);
@@ -199,20 +170,30 @@ class AcceleratorRecommendationAgent {
             console.log('🏢 Existing Accelerators:', existingAccelerators.slice(0, 5));
 
             const prompt = `
-        As a ServiceNow Accelerator Recommendation Agent, based on the pattern analysis provided, recommend new accelerators for the ServiceNow portfolio.
+        As a ServiceNow Accelerator Recommendation Agent, analyze customer requests that CANNOT be fulfilled by existing accelerators and recommend NEW accelerators to fill those gaps.
         
-        Pattern Analysis: ${JSON.stringify(patternAnalysis, null, 2)}
+        GAP DATA:
+        - Unmatched Requests: ${patternAnalysis.unmatchedCount || 0} (requests with no matching accelerators)
+        - Unmatched Request Details: ${JSON.stringify(patternAnalysis.unmatchedRequests?.slice(0, 10) || [], null, 2)}
+        - Partially Matched Requests: ${patternAnalysis.partiallyMatchedCount || 0} (requests with poor match quality)
+        - Partially Matched Request Details: ${JSON.stringify(patternAnalysis.partiallyMatchedRequests?.slice(0, 5) || [], null, 2)}
         
-        Existing Accelerators: ${JSON.stringify(existingAccelerators.slice(0, 10), null, 2)}
+        Existing Accelerators: ${JSON.stringify(existingAccelerators.slice(0, 10).map(a => a.name), null, 2)}
         
-        Please provide:
-        1. Top 5 recommended new accelerators
-        2. Business justification for each recommendation
-        3. Implementation complexity assessment
-        4. Expected customer impact
-        5. Priority ranking
+        YOUR TASK:
+        1. Analyze the unmatched/partially matched requests to identify SIMILAR unmet needs (they don't have to be identical)
+        2. Group similar requests together by SIMILAR gap theme (e.g., "mobile functionality", "advanced reporting", "third-party integrations", "automation", "security")
+        3. For each SIMILAR gap theme, recommend ONE new accelerator that would address those similar gaps
+        4. List ALL specific requests that have SIMILAR gaps (not just 1 request per recommendation!)
+        5. Let the AI use its discretion to determine what gaps are "similar enough" to group together
         
-        Format your response as a JSON object with these exact keys:
+        CRITICAL: For each recommendation, you MUST:
+        - Group MULTIPLE requests with SIMILAR (not necessarily identical) gaps together
+        - contributingRequests: Include ALL request IDs/numbers that have similar gaps (typically 3-15 requests per recommendation)
+        - gaps: List the SIMILAR gaps that these requests share (let AI determine similarity)
+        - suggestedSolution: How this single accelerator addresses the SIMILAR gaps for ALL contributing requests
+        
+        Format your response as a JSON object:
         {
             "recommendations": [
                 {
@@ -221,7 +202,15 @@ class AcceleratorRecommendationAgent {
                     "justification": "Business justification",
                     "complexity": "Low/Medium/High",
                     "impact": "Expected customer impact",
-                    "priority": "High/Medium/Low"
+                    "contributingRequests": [
+                        {
+                            "id": "request_id",
+                            "title": "Request title",
+                            "description": "Brief description"
+                        }
+                    ],
+                    "gaps": ["Specific gap 1", "Specific gap 2"],
+                    "suggestedSolution": "How this accelerator addresses the gaps"
                 }
             ]
         }

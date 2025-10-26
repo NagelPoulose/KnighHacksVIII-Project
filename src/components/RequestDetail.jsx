@@ -518,28 +518,6 @@ const RequestDetail = ({ request, matchResult, onBack, onMarkReviewed }) => {
                 </motion.div>
             )}
 
-            {/* AI Recommendation */}
-            {matchResult && matchResult.recommendation && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="card-modern p-6"
-                >
-                    <h2 className="text-xl font-semibold text-primary mb-4 flex items-center space-x-2">
-                        <Award className="h-5 w-5" />
-                        <span>AI Recommendation</span>
-                    </h2>
-                    <div className={`p-4 rounded-lg ${
-                        matchResult.recommendation.toLowerCase().includes('create') || matchResult.recommendation.toLowerCase().includes('new')
-                            ? 'bg-purple-50 border border-purple-200'
-                            : 'bg-blue-50 border border-blue-200'
-                    }`}>
-                        <p className="text-secondary font-medium">{matchResult.recommendation}</p>
-                    </div>
-                </motion.div>
-            )}
-
             {/* Analysis Metadata */}
             {matchResult && matchResult.analyzedAt && (
                 <motion.div

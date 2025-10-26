@@ -35,6 +35,11 @@ function App() {
         const stored = localStorage.getItem('reviewedRequests');
         return stored ? new Set(JSON.parse(stored)) : new Set();
     });
+    const [numRequestsToAnalyze, setNumRequestsToAnalyze] = useState(() => {
+        // Load from localStorage or default to 30
+        const stored = localStorage.getItem('numRequestsToAnalyze');
+        return stored ? parseInt(stored) : 30;
+    });
 
     const dataProcessor = new DataProcessor();
     const unifiedAnalyzer = new UnifiedAnalyzer();
@@ -43,6 +48,11 @@ function App() {
     useEffect(() => {
         loadData();
     }, []);
+
+    // Save numRequestsToAnalyze to localStorage when it changes
+    useEffect(() => {
+        localStorage.setItem('numRequestsToAnalyze', numRequestsToAnalyze.toString());
+    }, [numRequestsToAnalyze]);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -90,6 +100,13 @@ function App() {
                 analytics: analyticsData
             });
             setAnalytics(analyticsData);
+
+            // Load cached recommendations on startup
+            const cachedRecs = localStorage.getItem('recommendations');
+            if (cachedRecs) {
+                console.log('📦 Loading cached recommendations on startup');
+                setRecommendations(JSON.parse(cachedRecs));
+            }
 
             toast.success('Data loaded successfully!');
         } catch (error) {
@@ -171,22 +188,27 @@ function App() {
             return;
         }
 
+        // Clear recommendations cache when running new analysis
+        localStorage.removeItem('recommendations');
+        setRecommendations(null);
+
         setIsLoading(true);
         try {
             console.log('🤖 Starting unified AI analysis...');
             toast.loading('AI is analyzing requests...', { id: 'analysis' });
             
-            // Pick 5 random requests from ALL requests
+            // Pick N random requests from ALL requests based on user setting
+            const numToAnalyze = Math.min(numRequestsToAnalyze, data.requests.length);
             const shuffled = [...data.requests].sort(() => Math.random() - 0.5);
-            const random5 = shuffled.slice(0, 5);
+            const randomRequests = shuffled.slice(0, numToAnalyze);
             
-            console.log('🎲 Selected random requests:', random5.map(r => r.number || r.id));
+            console.log(`🎲 Selected ${numToAnalyze} random requests:`, randomRequests.map(r => r.number || r.id));
             
             const analyses = await unifiedAnalyzer.batchAnalyze(
-                random5,
+                randomRequests,
                 data.accelerators,
                 (progress) => {
-                    toast.loading(`AI analyzing... ${progress.percentage}% (${progress.processed}/5)`, { id: 'analysis' });
+                    toast.loading(`AI analyzing... ${progress.percentage}% (${progress.processed}/${numToAnalyze})`, { id: 'analysis' });
                 }
             );
             
@@ -260,17 +282,49 @@ function App() {
     const generateRecommendationsFromGaps = async (gaps, accelerators) => {
         if (!gaps || !accelerators) return;
         
+        // Set loading state immediately
+        setIsLoading(true);
+        toast.loading('Generating accelerator recommendations...', { id: 'recommendations' });
+        
         try {
+
+            // Get full request data for unmatched/partially matched requests
+            const unmatchedRequestsData = gaps.unmatched?.requests?.map(req => {
+                const fullRequest = data.requests.find(r => 
+                    (r.id || r.number) === (req.requestId || req.id || req.number)
+                );
+                return fullRequest || req;
+            }) || [];
+
+            const partiallyMatchedRequestsData = gaps.partiallyMatched?.requests?.map(req => {
+                const fullRequest = data.requests.find(r => 
+                    (r.id || r.number) === (req.requestId || req.id || req.number)
+                );
+                return fullRequest || req;
+            }) || [];
+
             const gapSummary = {
                 unmatchedCount: gaps.unmatched?.count || 0,
-                unmatchedRequests: gaps.unmatched?.requests?.slice(0, 20) || [],
-                partiallyMatchedCount: gaps.partiallyMatched?.count || 0
+                unmatchedRequests: unmatchedRequestsData, // Send ALL unmatched requests
+                partiallyMatchedCount: gaps.partiallyMatched?.count || 0,
+                partiallyMatchedRequests: partiallyMatchedRequestsData, // Send ALL partially matched requests
             };
 
             const recs = await recommendationAgent.recommendAccelerators(gapSummary, accelerators);
+            
+            console.log('📄 Full recommendations response:', JSON.stringify(recs, null, 2));
+            
+            // Cache the recommendations
+            localStorage.setItem('recommendations', JSON.stringify(recs));
+            console.log('✅ Cached recommendations with full details');
+            
             setRecommendations(recs);
+            toast.success('Recommendations generated successfully!', { id: 'recommendations' });
         } catch (error) {
             console.error('Recommendation error:', error);
+            toast.error('Failed to generate recommendations', { id: 'recommendations' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -341,6 +395,8 @@ function App() {
                         onRunAIAnalysis={runAIAnalysis}
                         hasAIAnalysis={matchResults && matchResults.length > 0}
                         isLoading={isLoading}
+                        numRequestsToAnalyze={numRequestsToAnalyze}
+                        setNumRequestsToAnalyze={setNumRequestsToAnalyze}
                     />
                 );
             case 'requests':
@@ -365,7 +421,8 @@ function App() {
                         recommendations={recommendations}
                         onGenerate={() => generateRecommendationsFromGaps(gapAnalysis, data.accelerators)}
                         isLoading={isLoading}
-                        hasPatternAnalysis={!!gapAnalysis}
+                        hasGapAnalysis={!!gapAnalysis}
+                        onViewRequest={handleSelectRequest}
                     />
                 );
             default:
@@ -376,6 +433,8 @@ function App() {
                         onRunAIAnalysis={runAIAnalysis}
                         hasAIAnalysis={matchResults && matchResults.length > 0}
                         isLoading={isLoading}
+                        numRequestsToAnalyze={numRequestsToAnalyze}
+                        setNumRequestsToAnalyze={setNumRequestsToAnalyze}
                     />
                 );
         }
