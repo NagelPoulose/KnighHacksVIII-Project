@@ -59,7 +59,7 @@ const Dashboard = ({ data, analytics, onRunAIAnalysis, hasAIAnalysis, isLoading,
     ];
 
     const categoryData = Object.entries(analytics.byCategory)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .map(([category, count]) => ({
             category: category || 'Uncategorized',
             count,
@@ -83,7 +83,7 @@ const Dashboard = ({ data, analytics, onRunAIAnalysis, hasAIAnalysis, isLoading,
                 className="text-center mb-8"
             >
                 <h1 className="text-4xl font-bold text-primary mb-4">
-                    ServiceNow AI Accelerator Hub
+                    ServiceLater AI Accelerator Hub
                 </h1>
                 <p className="text-xl text-secondary">
                     Intelligent analysis of customer needs and accelerator recommendations
@@ -128,11 +128,10 @@ const Dashboard = ({ data, analytics, onRunAIAnalysis, hasAIAnalysis, isLoading,
                                 whileTap={{ scale: 0.95 }}
                                 onClick={onRunAIAnalysis}
                                 disabled={isLoading}
-                                className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                                    isLoading
+                                className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${isLoading
                                         ? 'bg-gray-400 text-white cursor-not-allowed'
                                         : 'bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600'
-                                }`}
+                                    }`}
                             >
                                 {isLoading ? (
                                     <>

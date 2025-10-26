@@ -73,7 +73,7 @@ function App() {
             if (cachedAnalyses.length > 0) {
                 console.log(`✅ Loaded ${cachedAnalyses.length} cached analyses`);
                 processedData = applyAnalysesToRequests(processedData, cachedAnalyses);
-                
+
                 const matchResultsFromCache = cachedAnalyses.map(a => ({
                     requestId: a.requestId,
                     canBeFulfilled: a.canBeFulfilled,
@@ -83,12 +83,12 @@ function App() {
                     recommendation: a.recommendation,
                     analyzedAt: a.analyzedAt
                 }));
-                
+
                 setMatchResults(matchResultsFromCache);
-                
+
                 const gaps = analyzeGaps(matchResultsFromCache);
                 setGapAnalysis(gaps);
-                
+
                 toast.success(`Loaded ${cachedAnalyses.length} cached AI analyses!`);
             }
 
@@ -140,10 +140,10 @@ function App() {
     };
 
     const handleSelectRequest = (request) => {
-        const matchResult = matchResults?.find(m => 
+        const matchResult = matchResults?.find(m =>
             m.requestId === (request.id || request.number)
         );
-        
+
         setSelectedRequest({
             ...request,
             matchResult,
@@ -153,7 +153,7 @@ function App() {
 
     const handleMarkReviewed = (request, markAsReviewed = true) => {
         const requestId = request.id || request.number;
-        
+
         if (markAsReviewed) {
             setReviewedRequests(prev => {
                 const newSet = new Set([...prev, requestId]);
@@ -172,7 +172,7 @@ function App() {
             });
             toast.success('Request unmarked as reviewed');
         }
-        
+
         if (selectedRequest && (selectedRequest.id || selectedRequest.number) === requestId) {
             setSelectedRequest(prev => ({ ...prev, reviewed: markAsReviewed }));
         }
@@ -196,14 +196,14 @@ function App() {
         try {
             console.log('🤖 Starting unified AI analysis...');
             toast.loading('AI is analyzing requests...', { id: 'analysis' });
-            
+
             // Pick N random requests from ALL requests based on user setting
             const numToAnalyze = Math.min(numRequestsToAnalyze, data.requests.length);
             const shuffled = [...data.requests].sort(() => Math.random() - 0.5);
             const randomRequests = shuffled.slice(0, numToAnalyze);
-            
+
             console.log(`🎲 Selected ${numToAnalyze} random requests:`, randomRequests.map(r => r.number || r.id));
-            
+
             const analyses = await unifiedAnalyzer.batchAnalyze(
                 randomRequests,
                 data.accelerators,
@@ -211,12 +211,12 @@ function App() {
                     toast.loading(`AI analyzing... ${progress.percentage}% (${progress.processed}/${numToAnalyze})`, { id: 'analysis' });
                 }
             );
-            
+
             console.log('✅ Analyses received:', analyses);
             console.log('✅ First analysis sample:', JSON.stringify(analyses[0], null, 2));
-            
+
             const updatedRequests = applyAnalysesToRequests(data.requests, analyses);
-            
+
             const matchResultsArray = analyses.map(a => ({
                 requestId: a.requestId,
                 canBeFulfilled: a.canBeFulfilled,
@@ -226,13 +226,13 @@ function App() {
                 recommendation: a.recommendation,
                 analyzedAt: a.analyzedAt
             }));
-            
+
             console.log('✅ Match results array:', matchResultsArray);
-            
+
             setMatchResults(matchResultsArray);
             setData(prev => ({ ...prev, requests: updatedRequests }));
             toast.success('AI analysis complete!', { id: 'analysis' });
-            
+
             const gaps = analyzeGaps(matchResultsArray);
             setGapAnalysis(gaps);
         } catch (error) {
@@ -249,11 +249,11 @@ function App() {
         analyses.forEach(analysis => {
             analysesMap.set(analysis.requestId, analysis);
         });
-        
+
         return requests.map((request) => {
             const requestId = request.number || request.id;
             const analysis = analysesMap.get(requestId);
-            
+
             if (analysis) {
                 return {
                     ...request,
@@ -281,23 +281,23 @@ function App() {
 
     const generateRecommendationsFromGaps = async (gaps, accelerators) => {
         if (!gaps || !accelerators) return;
-        
+
         // Set loading state immediately
         setIsLoading(true);
         toast.loading('Generating accelerator recommendations...', { id: 'recommendations' });
-        
+
         try {
 
             // Get full request data for unmatched/partially matched requests
             const unmatchedRequestsData = gaps.unmatched?.requests?.map(req => {
-                const fullRequest = data.requests.find(r => 
+                const fullRequest = data.requests.find(r =>
                     (r.id || r.number) === (req.requestId || req.id || req.number)
                 );
                 return fullRequest || req;
             }) || [];
 
             const partiallyMatchedRequestsData = gaps.partiallyMatched?.requests?.map(req => {
-                const fullRequest = data.requests.find(r => 
+                const fullRequest = data.requests.find(r =>
                     (r.id || r.number) === (req.requestId || req.id || req.number)
                 );
                 return fullRequest || req;
@@ -311,13 +311,13 @@ function App() {
             };
 
             const recs = await recommendationAgent.recommendAccelerators(gapSummary, accelerators);
-            
+
             console.log('📄 Full recommendations response:', JSON.stringify(recs, null, 2));
-            
+
             // Cache the recommendations
             localStorage.setItem('recommendations', JSON.stringify(recs));
             console.log('✅ Cached recommendations with full details');
-            
+
             setRecommendations(recs);
             toast.success('Recommendations generated successfully!', { id: 'recommendations' });
         } catch (error) {
@@ -330,13 +330,13 @@ function App() {
 
     const analyzeGaps = (matchResults) => {
         const unmatched = matchResults.filter(r => !r.canBeFulfilled || r.overallConfidence < 50);
-        const partiallyMatched = matchResults.filter(r => 
-            r.canBeFulfilled && 
-            r.overallConfidence >= 50 && 
+        const partiallyMatched = matchResults.filter(r =>
+            r.canBeFulfilled &&
+            r.overallConfidence >= 50 &&
             r.overallConfidence < 80
         );
         const fullyMatched = matchResults.filter(r => r.canBeFulfilled && r.overallConfidence >= 80);
-        
+
         return {
             total: matchResults.length,
             unmatched: {
@@ -389,8 +389,8 @@ function App() {
         switch (currentView) {
             case 'dashboard':
                 return (
-                    <Dashboard 
-                        data={data} 
+                    <Dashboard
+                        data={data}
                         analytics={analytics}
                         onRunAIAnalysis={runAIAnalysis}
                         hasAIAnalysis={matchResults && matchResults.length > 0}
@@ -427,8 +427,8 @@ function App() {
                 );
             default:
                 return (
-                    <Dashboard 
-                        data={data} 
+                    <Dashboard
+                        data={data}
                         analytics={analytics}
                         onRunAIAnalysis={runAIAnalysis}
                         hasAIAnalysis={matchResults && matchResults.length > 0}
@@ -457,7 +457,7 @@ function App() {
                                 <Zap className="h-6 w-6 text-gray-700" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-primary">ServiceNow AI Hub</h1>
+                                <h1 className="text-xl font-bold text-primary">ServiceLater AI Hub</h1>
                                 <p className="text-sm text-secondary">Accelerator Intelligence Platform</p>
                             </div>
                         </div>
