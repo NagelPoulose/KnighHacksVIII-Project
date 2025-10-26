@@ -211,8 +211,8 @@ const AcceleratorRecommendations = ({
                     onClick={onGenerate}
                     disabled={isLoading || !hasPatternAnalysis}
                     className={`px-8 py-4 font-semibold rounded-xl shadow-lg transition-all duration-200 flex items-center space-x-3 ${hasPatternAnalysis
-                            ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white hover:shadow-xl'
-                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white hover:shadow-xl'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {isLoading ? (

@@ -135,8 +135,8 @@ const Dashboard = ({ data, analytics }) => {
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={categoryData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                            <XAxis 
-                                dataKey="category" 
+                            <XAxis
+                                dataKey="category"
                                 stroke="#6B7280"
                                 fontSize={12}
                                 angle={-45}
@@ -145,8 +145,8 @@ const Dashboard = ({ data, analytics }) => {
                             />
                             <YAxis stroke="#6B7280" fontSize={12} />
                             <Tooltip
-                                contentStyle={{ 
-                                    backgroundColor: '#FFFFFF', 
+                                contentStyle={{
+                                    backgroundColor: '#FFFFFF',
                                     border: '1px solid #E5E7EB',
                                     borderRadius: '8px',
                                     color: '#212121',
@@ -186,8 +186,8 @@ const Dashboard = ({ data, analytics }) => {
                                 ))}
                             </Pie>
                             <Tooltip
-                                contentStyle={{ 
-                                    backgroundColor: '#FFFFFF', 
+                                contentStyle={{
+                                    backgroundColor: '#FFFFFF',
                                     border: '1px solid #E5E7EB',
                                     borderRadius: '8px',
                                     color: '#212121',

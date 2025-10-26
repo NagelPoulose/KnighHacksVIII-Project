@@ -63,13 +63,13 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="glass-effect rounded-xl p-6"
+                        className="card-modern rounded-xl p-6"
                     >
                         <div className="flex items-center space-x-3 mb-6">
-                            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg">
-                                <Brain className="h-6 w-6 text-white" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <Brain className="h-6 w-6 text-gray-700" />
                             </div>
-                            <h3 className="text-xl font-semibold text-white">Pattern Analysis</h3>
+                            <h3 className="text-xl font-semibold text-primary">Pattern Analysis</h3>
                         </div>
                         <div className="space-y-4">
                             {patterns.map((pattern, index) => (
@@ -78,11 +78,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.1 + index * 0.1 }}
-                                    className="flex items-start space-x-3 p-4 bg-white/5 rounded-lg border border-white/10"
+                                    className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200"
                                 >
-                                    <TrendingUp className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                                    <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                        <p className="text-white">{pattern}</p>
+                                        <p className="text-primary">{pattern}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -96,13 +96,13 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="glass-effect rounded-xl p-6"
+                        className="card-modern rounded-xl p-6"
                     >
                         <div className="flex items-center space-x-3 mb-6">
-                            <div className="p-2 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg">
-                                <TrendingUp className="h-6 w-6 text-white" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <TrendingUp className="h-6 w-6 text-gray-700" />
                             </div>
-                            <h3 className="text-xl font-semibold text-white">Trend Analysis</h3>
+                            <h3 className="text-xl font-semibold text-primary">Trend Analysis</h3>
                         </div>
                         <div className="space-y-4">
                             {trends.map((trend, index) => (
@@ -111,11 +111,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.2 + index * 0.1 }}
-                                    className="flex items-start space-x-3 p-4 bg-white/5 rounded-lg border border-white/10"
+                                    className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200"
                                 >
                                     <ArrowRight className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
                                     <div>
-                                        <p className="text-white">{trend}</p>
+                                        <p className="text-primary">{trend}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -129,13 +129,13 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="glass-effect rounded-xl p-6"
+                        className="card-modern rounded-xl p-6"
                     >
                         <div className="flex items-center space-x-3 mb-6">
-                            <div className="p-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg">
-                                <AlertCircle className="h-6 w-6 text-white" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <AlertCircle className="h-6 w-6 text-gray-700" />
                             </div>
-                            <h3 className="text-xl font-semibold text-white">Gap Analysis</h3>
+                            <h3 className="text-xl font-semibold text-primary">Gap Analysis</h3>
                         </div>
                         <div className="space-y-4">
                             {gaps.map((gap, index) => (
@@ -144,11 +144,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.3 + index * 0.1 }}
-                                    className="flex items-start space-x-3 p-4 bg-white/5 rounded-lg border border-white/10"
+                                    className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200"
                                 >
                                     <AlertCircle className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                                     <div>
-                                        <p className="text-white">{gap}</p>
+                                        <p className="text-primary">{gap}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -162,13 +162,13 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="glass-effect rounded-xl p-6"
+                        className="card-modern rounded-xl p-6"
                     >
                         <div className="flex items-center space-x-3 mb-6">
-                            <div className="p-2 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg">
-                                <Lightbulb className="h-6 w-6 text-white" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <Lightbulb className="h-6 w-6 text-gray-700" />
                             </div>
-                            <h3 className="text-xl font-semibold text-white">Priority Recommendations</h3>
+                            <h3 className="text-xl font-semibold text-primary">Priority Recommendations</h3>
                         </div>
                         <div className="space-y-4">
                             {recommendations.map((rec, index) => (
@@ -177,11 +177,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.4 + index * 0.1 }}
-                                    className="flex items-start space-x-3 p-4 bg-white/5 rounded-lg border border-white/10"
+                                    className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200"
                                 >
                                     <Sparkles className="h-5 w-5 text-yellow-400 mt-0.5 flex-shrink-0" />
                                     <div>
-                                        <p className="text-white">{rec}</p>
+                                        <p className="text-primary">{rec}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -195,11 +195,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="glass-effect rounded-xl p-6"
+                        className="card-modern rounded-xl p-6"
                     >
-                        <h3 className="text-xl font-semibold text-white mb-4">Detailed Analysis</h3>
-                        <div className="bg-black/20 rounded-lg p-4 max-h-96 overflow-y-auto">
-                            <pre className="text-gray-300 text-sm whitespace-pre-wrap">
+                        <h3 className="text-xl font-semibold text-primary mb-4">Detailed Analysis</h3>
+                        <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto border border-gray-200">
+                            <pre className="text-secondary text-sm whitespace-pre-wrap">
                                 {analysis.rawResponse}
                             </pre>
                         </div>
