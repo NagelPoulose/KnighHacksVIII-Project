@@ -49,7 +49,12 @@ const AcceleratorRecommendations = ({
     const renderRecommendations = () => {
         if (!recommendations) return null;
 
-        const recs = recommendations.recommendations || [];
+        console.log('🔍 AcceleratorRecommendations - Full recommendations object:', recommendations);
+        console.log('📋 Recommendations type:', typeof recommendations);
+        console.log('🔑 Recommendations keys:', Object.keys(recommendations || {}));
+        
+        const recs = recommendations.recommendations || recommendations || [];
+        console.log('📝 Final recommendations array:', recs);
 
         if (recs.length === 0) {
             return (
@@ -58,10 +63,10 @@ const AcceleratorRecommendations = ({
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center py-12"
                 >
-                    <div className="glass-effect rounded-xl p-8 max-w-md mx-auto">
+                    <div className="card-modern rounded-xl p-8 max-w-md mx-auto">
                         <Target className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-white mb-2">No Recommendations</h3>
-                        <p className="text-gray-400">
+                        <h3 className="text-xl font-semibold text-primary mb-2">No Recommendations</h3>
+                        <p className="text-secondary">
                             No accelerator recommendations were generated. Try running pattern analysis first.
                         </p>
                     </div>
@@ -77,7 +82,7 @@ const AcceleratorRecommendations = ({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="glass-effect rounded-xl p-6 card-hover"
+                        className="card-modern rounded-xl p-6"
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center space-x-3">
@@ -85,11 +90,11 @@ const AcceleratorRecommendations = ({
                                     <span className="text-white font-bold text-lg">#{index + 1}</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-semibold text-white">
+                                    <h3 className="text-xl font-semibold text-primary">
                                         {rec.title || `Accelerator Recommendation ${index + 1}`}
                                     </h3>
                                     <div className="flex items-center space-x-4 mt-1">
-                                        <span className="text-sm text-gray-400">
+                                        <span className="text-sm text-secondary">
                                             Priority: {index === 0 ? 'High' : index === 1 ? 'Medium' : 'Standard'}
                                         </span>
                                         {rec.complexity && (
@@ -103,7 +108,7 @@ const AcceleratorRecommendations = ({
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Star className="h-5 w-5 text-yellow-400" />
-                                <span className="text-sm text-gray-400">AI Recommended</span>
+                                <span className="text-sm text-secondary">AI Recommended</span>
                             </div>
                         </div>
 
@@ -111,11 +116,11 @@ const AcceleratorRecommendations = ({
                             {/* Business Justification */}
                             {rec.justification && (
                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-semibold text-gray-300 flex items-center space-x-2">
+                                    <h4 className="text-sm font-semibold text-primary flex items-center space-x-2">
                                         <Target className="h-4 w-4" />
                                         <span>Business Justification</span>
                                     </h4>
-                                    <p className="text-gray-300 text-sm leading-relaxed">
+                                    <p className="text-secondary text-sm leading-relaxed">
                                         {rec.justification}
                                     </p>
                                 </div>
@@ -124,11 +129,11 @@ const AcceleratorRecommendations = ({
                             {/* Implementation Complexity */}
                             {rec.complexity && (
                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-semibold text-gray-300 flex items-center space-x-2">
+                                    <h4 className="text-sm font-semibold text-primary flex items-center space-x-2">
                                         <Clock className="h-4 w-4" />
                                         <span>Implementation Complexity</span>
                                     </h4>
-                                    <p className="text-gray-300 text-sm leading-relaxed">
+                                    <p className="text-secondary text-sm leading-relaxed">
                                         {rec.complexity}
                                     </p>
                                 </div>
@@ -137,11 +142,11 @@ const AcceleratorRecommendations = ({
                             {/* Customer Impact */}
                             {rec.impact && (
                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-semibold text-gray-300 flex items-center space-x-2">
+                                    <h4 className="text-sm font-semibold text-primary flex items-center space-x-2">
                                         <Users className="h-4 w-4" />
                                         <span>Expected Customer Impact</span>
                                     </h4>
-                                    <p className="text-gray-300 text-sm leading-relaxed">
+                                    <p className="text-primary text-sm leading-relaxed">
                                         {rec.impact}
                                     </p>
                                 </div>
@@ -168,7 +173,7 @@ const AcceleratorRecommendations = ({
                                     <span>Analyze Further</span>
                                 </motion.button>
                             </div>
-                            <div className="flex items-center space-x-2 text-sm text-gray-400">
+                            <div className="flex items-center space-x-2 text-sm text-secondary">
                                 <Award className="h-4 w-4" />
                                 <span>AI Generated</span>
                             </div>
@@ -193,7 +198,7 @@ const AcceleratorRecommendations = ({
                     </div>
                     <h1 className="text-4xl font-bold text-white">Accelerator Recommendations</h1>
                 </div>
-                <p className="text-xl text-gray-300">
+                <p className="text-xl text-primary">
                     AI-powered recommendations for new ServiceNow accelerators
                 </p>
             </motion.div>

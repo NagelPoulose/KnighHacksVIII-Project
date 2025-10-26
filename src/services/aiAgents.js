@@ -161,6 +161,10 @@ class AcceleratorRecommendationAgent {
 
     async recommendAccelerators(patternAnalysis, existingAccelerators) {
         try {
+            console.log('💡 Accelerator Recommendation Agent - Starting recommendations...');
+            console.log('📊 Pattern Analysis Input:', patternAnalysis);
+            console.log('🏢 Existing Accelerators:', existingAccelerators.slice(0, 5));
+            
             const prompt = `
         As a ServiceNow Accelerator Recommendation Agent, based on the pattern analysis provided, recommend new accelerators for the ServiceNow portfolio.
         
@@ -175,13 +179,31 @@ class AcceleratorRecommendationAgent {
         4. Expected customer impact
         5. Priority ranking
         
-        Format your response as a structured JSON object with detailed recommendations.
+        Format your response as a JSON object with these exact keys:
+        {
+            "recommendations": [
+                {
+                    "title": "Accelerator Name",
+                    "description": "Brief description",
+                    "justification": "Business justification",
+                    "complexity": "Low/Medium/High",
+                    "impact": "Expected customer impact",
+                    "priority": "High/Medium/Low"
+                }
+            ]
+        }
       `;
 
+            console.log('🤖 Sending recommendation request to AI...');
             const response = await this.callGoogleAI(prompt);
-            return this.parseRecommendations(response);
+            console.log('📄 Raw recommendation response:', response);
+            
+            const parsed = this.parseRecommendations(response);
+            console.log('✅ Parsed recommendations:', parsed);
+            
+            return parsed;
         } catch (error) {
-            console.error('Accelerator Recommendation Error:', error);
+            console.error('❌ Accelerator Recommendation Error:', error);
             // Return mock recommendations if API fails
             return {
                 recommendations: [
@@ -246,19 +268,29 @@ class AcceleratorRecommendationAgent {
 
     parseRecommendations(response) {
         try {
+            console.log('🔍 Parsing recommendation response:', response);
+            
             const jsonMatch = response.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-                return JSON.parse(jsonMatch[0]);
+                const jsonStr = jsonMatch[0];
+                console.log('📄 Extracted JSON string:', jsonStr);
+                const parsed = JSON.parse(jsonStr);
+                console.log('✅ Successfully parsed JSON recommendations:', parsed);
+                return parsed;
             }
 
-            return {
+            console.log('⚠️ No JSON found, using text parsing fallback');
+            const parsed = {
                 recommendations: this.extractRecommendations(response),
                 rawResponse: response
             };
+            console.log('📝 Parsed text recommendations:', parsed);
+            return parsed;
         } catch (error) {
+            console.error('❌ Error parsing recommendations:', error);
             return {
                 rawResponse: response,
-                error: 'Failed to parse recommendations'
+                error: 'Failed to parse recommendations: ' + error.message
             };
         }
     }

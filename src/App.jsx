@@ -51,7 +51,7 @@ function App() {
             setAnalytics(analyticsData);
 
             toast.success('Data loaded successfully!');
-            
+
             // Automatically start the AI analysis pipeline
             await runAutomaticAnalysis(processedData, csvData.accelerators);
         } catch (error) {
@@ -66,7 +66,7 @@ function App() {
         try {
             console.log('🤖 Starting automatic AI analysis pipeline...');
             toast.loading('Running AI analysis...', { id: 'analysis' });
-            
+
             // Step 1: Pattern Analysis
             console.log('📊 Step 1: Running pattern analysis...');
             const aiData = dataProcessor.prepareDataForAI(processedData, accelerators);
@@ -74,7 +74,7 @@ function App() {
             setPatternAnalysis(analysis);
             console.log('✅ Pattern analysis completed:', analysis);
             toast.success('Pattern analysis completed!', { id: 'analysis' });
-            
+
             // Step 2: Generate Recommendations
             console.log('💡 Step 2: Generating accelerator recommendations...');
             toast.loading('Generating recommendations...', { id: 'recommendations' });
@@ -82,7 +82,7 @@ function App() {
             setRecommendations(recs);
             console.log('✅ Recommendations generated:', recs);
             toast.success('AI analysis pipeline completed!', { id: 'recommendations' });
-            
+
         } catch (error) {
             console.error('❌ Automatic analysis error:', error);
             toast.error('AI analysis failed: ' + error.message);
@@ -223,8 +223,8 @@ function App() {
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setCurrentView(item.id)}
                                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                            ? 'bg-gray-100 text-primary shadow-sm border border-gray-200'
-                                            : 'text-secondary hover:bg-gray-50 hover:text-primary'
+                                        ? 'bg-gray-100 text-primary shadow-sm border border-gray-200'
+                                        : 'text-secondary hover:bg-gray-50 hover:text-primary'
                                         }`}
                                 >
                                     <Icon className="h-5 w-5" />
