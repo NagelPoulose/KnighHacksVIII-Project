@@ -57,30 +57,28 @@ CUSTOMER REQUEST:
 - Description: ${request.description || request.u_description || 'N/A'}
 - Capability: ${request.capability || 'N/A'}
 
-EXISTING ACCELERATORS (${accelerators.length} total - EVALUATE EACH ONE):
-${JSON.stringify(accelerators.map(a => ({
-  name: a.name,
-  description: a.description,
-  category: a.category
-})), null, 2)}
+EXISTING ACCELERATORS (${accelerators.length} total): ${accelerators.map(a => a.name).join(', ')}
 
-YOUR TASK - CRITICAL: You MUST evaluate EVERY SINGLE accelerator above and provide a matchScore (0-100) for each.
+YOUR TASK - CRITICAL: Evaluate accelerators but ONLY return the TOP 3 per category (or fewer if a category has less than 3).
 
 STEP 1 - CLASSIFICATION: Assign priority, complexity, and category based on the request text.
 
 STEP 2 - REQUIREMENTS: Extract 3-10 MUST-HAVEs (core requirements) and 0-8 NICE-TO-HAVEs (optional enhancements).
 
 STEP 3 - ACCELERATOR EVALUATION (THIS IS CRITICAL):
-For EACH of the ${accelerators.length} accelerators listed above:
-- Compare it against the customer request requirements
-- Calculate matchScore (0-100) based on how well it covers the MUST-HAVEs and NICE-TO-HAVEs
-- Provide reasoning for why this accelerator matches or doesn't match
-- Match score should be:
-  * 80-100: Excellent match - covers most MUST-HAVEs
-  * 50-79: Partial match - covers some requirements
-  * 0-49: Poor match - minimal or no relevant overlap
+- Evaluate ALL ${accelerators.length} accelerators internally
+- Group them by category
+- For EACH category, select the TOP 3 accelerators (or top 2, or top 1 if fewer exist in that category)
+- For each selected accelerator:
+  * Compare it against the customer request requirements
+  * Calculate matchScore (0-100) based on how well it covers the MUST-HAVEs and NICE-TO-HAVEs
+  * Provide reasoning for why this accelerator matches or doesn't match
+  * Match score should be:
+    • 80-100: Excellent match - covers most MUST-HAVEs
+    • 50-79: Partial match - covers some requirements
+    • 0-49: Poor match - minimal or no relevant overlap
 
-STEP 4 - SELECTION: From the accelerators you evaluated, select the best combination (0-N) that together fulfill the request with minimal redundancy.
+STEP 4 - SELECTION: From the selected accelerators, choose the best combination (0-N) that together fulfill the request with minimal redundancy.
 
 STEP 5 - DECISION: Can this request be fulfilled by existing accelerators? If yes, how? If no, what's missing?
 
@@ -88,11 +86,11 @@ RETURN JSON ONLY (no markdown):
 {
   "classification": {
     "priority": "high/medium/low",
-    "priorityReasoning": "Brief explanation",
+    "priorityReasoning": "Detailed 2-3 sentence explanation with specific evidence from the request (users, urgency, business impact, security/compliance requirements)",
     "complexity": "high/medium/low",
-    "complexityReasoning": "Brief explanation",
+    "complexityReasoning": "Detailed 2-3 sentence explanation about integrations, custom development, architecture changes, and estimated implementation time",
     "category": "Automation/Integration/Reporting/Security/User Experience/General",
-    "categoryReasoning": "Brief explanation",
+    "categoryReasoning": "Detailed explanation listing specific keywords, phrases, or functionality that led to this category classification",
     "confidenceScore": 70
   },
   "matching": {
@@ -105,15 +103,15 @@ RETURN JSON ONLY (no markdown):
         "coverageLevel": "full/partial/minimal",
         "covers": {"mustHaves": ["req1"], "niceToHaves": []},
         "evidenceCount": 3,
-        "reasoning": "How this accelerator relates to the request",
+        "reasoning": "Detailed 3-5 sentence explanation covering: (1) which specific requirements this accelerator addresses, (2) how the accelerator's features/capabilities map to those requirements, (3) what value it provides, and (4) any limitations or assumptions",
         "assumptions": "",
         "disqualifiersTriggered": [],
         "estimatedHumanEffortHours": 16,
         "riskFlags": []
       }
-      // MANDATORY: Include ALL ${accelerators.length} accelerators in this array
+      // MANDATORY: Include ONLY the TOP 3 accelerators per category (or fewer if category has less)
       // Each accelerator must have a matchScore (0-100)
-      // Even if matchScore is 0, still include it with reasoning why it doesn't match
+      // Total should be around 15-20 accelerators max (3 per category × ~5-7 categories)
     ],
     "selectedAccelerators": [
       {
@@ -128,17 +126,17 @@ RETURN JSON ONLY (no markdown):
           "riskPenalty": 0
         },
         "estimatedHumanEffortHours": 16,
-        "reasoning": "Why selected"
+        "reasoning": "Detailed 2-3 sentence explanation of why this accelerator was selected: what specific value it adds to the solution, how it complements other selected accelerators, and what makes it the best choice among alternatives"
       }
     ],
     "setCoveragePercent": 85,
     "effortCostTotalHours": 32,
-    "redundancyNotes": "",
-    "conflictNotes": "",
+    "redundancyNotes": "Detailed explanation of any overlapping functionality between selected accelerators and how that redundancy is handled or why it's acceptable",
+    "conflictNotes": "Detailed explanation of any conflicts (version/platform/security/integration) between selected accelerators",
     "canBeFulfilled": true,
     "overallConfidence": 80,
-    "gapAnalysis": "Any gaps in coverage",
-    "recommendation": "Implementation plan or new accelerator proposal",
+    "gapAnalysis": "Detailed 2-3 sentence analysis identifying any requirements NOT covered by the selected accelerators, why current catalog cannot address them, and what's needed to fully satisfy the request",
+    "recommendation": "Detailed 3-5 sentence implementation plan OR detailed new accelerator proposal (title, scope, key integrations, deliverables, NFRs) if gaps exist",
     "implementationPlan": ["Step 1", "Step 2"],
     "diagnostics": {
       "stoppingCondition": "Why selection stopped",
@@ -148,12 +146,7 @@ RETURN JSON ONLY (no markdown):
   }
 }
 
-IMPORTANT REMINDERS:
-1. You MUST include ALL ${accelerators.length} accelerators in the "evaluatedAccelerators" array
-2. Each accelerator must have a matchScore (0-100) based on how well it addresses the request requirements
-3. Match scores: 80-100 = excellent, 50-79 = partial, 0-49 = poor
-4. Return ONLY valid JSON - no markdown, no additional text
-5. Be thorough and honest in your evaluation - even accelerators with low match scores should be included`;
+IMPORTANT: Return ONLY valid JSON. Include ONLY top 3 per category in evaluatedAccelerators.`;
 
             console.log('🤖 Unified AI Analysis for:', request.number || request.id);
             const response = await this.callGoogleAI(prompt);
@@ -209,7 +202,7 @@ IMPORTANT REMINDERS:
     }
 
     async callGoogleAI(prompt) {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -234,6 +227,15 @@ IMPORTANT REMINDERS:
         }
 
         const data = await response.json();
+        
+        // Log token usage if available
+        if (data.usageMetadata) {
+            console.log('📊 Token Usage:', {
+                inputTokens: data.usageMetadata.promptTokenCount,
+                outputTokens: data.usageMetadata.candidatesTokenCount,
+                totalTokens: data.usageMetadata.totalTokenCount
+            });
+        }
         
         // Check if finish reason is MAX_TOKENS
         if (data.candidates && data.candidates[0] && data.candidates[0].finishReason === 'MAX_TOKENS') {
