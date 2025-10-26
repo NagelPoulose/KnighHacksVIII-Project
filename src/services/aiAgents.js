@@ -35,12 +35,12 @@ class PatternAnalysisAgent {
             console.log('📊 Customer Data:', customerData);
             const response = await this.callGoogleAI(prompt);
             console.log('🤖 Pattern Analysis Agent - Raw response:', response);
-            
+
             const parsed = this.parseResponse(response);
             console.log('✅ Pattern Analysis Agent - Parsed response:', parsed);
             console.log('📋 Emerging Needs:', parsed.emergingNeeds);
             console.log('🔍 Patterns:', parsed.patterns);
-            
+
             return parsed;
         } catch (error) {
             console.error('Pattern Analysis Error:', error);
