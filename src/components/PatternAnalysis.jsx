@@ -27,17 +27,17 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
             <div className="space-y-8">
                 {/* Emerging Needs */}
                 {emergingNeeds.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="glass-effect rounded-xl p-6"
-                    >
-                        <div className="flex items-center space-x-3 mb-6">
-                            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                                <Target className="h-6 w-6 text-white" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-white">Emerging Customer Needs</h3>
-                        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card-modern rounded-xl p-6"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Target className="h-6 w-6 text-gray-700" />
+              </div>
+              <h3 className="text-xl font-semibold text-primary">Emerging Customer Needs</h3>
+            </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {emergingNeeds.map((need, index) => (
                                 <motion.div
@@ -45,11 +45,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.1 }}
-                                    className="flex items-start space-x-3 p-4 bg-white/5 rounded-lg border border-white/10"
+                                    className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200"
                                 >
-                                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                        <p className="text-white font-medium">{need}</p>
+                                        <p className="text-primary font-medium">{need}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -219,22 +219,23 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                 isLoading={isLoading}
             />
 
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center"
-            >
-                <div className="flex items-center justify-center space-x-3 mb-4">
-                    <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
-                        <Brain className="h-8 w-8 text-white" />
-                    </div>
-                    <h1 className="text-4xl font-bold text-white">Pattern Analysis</h1>
-                </div>
-                <p className="text-xl text-gray-300">
-                    AI-powered analysis of customer needs and emerging patterns
-                </p>
-            </motion.div>
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-12"
+      >
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <div className="p-3 bg-gray-100 rounded-xl">
+            <Brain className="h-8 w-8 text-gray-700" />
+          </div>
+          <h1 className="text-4xl font-bold text-primary">Pattern Analysis</h1>
+        </div>
+        <p className="text-xl text-secondary">
+          AI-powered analysis of customer needs and emerging patterns
+        </p>
+        <div className="divider-line mt-8"></div>
+      </motion.div>
 
             {/* Action Button */}
             <motion.div
@@ -248,11 +249,11 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                     whileTap={{ scale: 0.95 }}
                     onClick={onRunAnalysis}
                     disabled={isLoading}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                    className="px-8 py-4 bg-gray-100 text-primary font-semibold rounded-xl border border-gray-200 hover:bg-gray-200 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
                 >
                     {isLoading ? (
                         <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                             <span>Analyzing Patterns...</span>
                         </>
                     ) : (

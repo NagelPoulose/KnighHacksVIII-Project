@@ -143,29 +143,29 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="min-h-screen">
             <Toaster position="top-right" />
 
             {/* Header */}
             <motion.header
                 initial={{ opacity: 0, y: -50 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-effect border-b border-white/10"
+                className="glass-effect border-b border-gray-200"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                                <Zap className="h-6 w-6 text-white" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <Zap className="h-6 w-6 text-gray-700" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-white">ServiceNow AI Hub</h1>
-                                <p className="text-sm text-gray-300">Accelerator Intelligence Platform</p>
+                                <h1 className="text-xl font-bold text-primary">ServiceNow AI Hub</h1>
+                                <p className="text-sm text-secondary">Accelerator Intelligence Platform</p>
                             </div>
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-2 text-sm text-gray-300">
+                            <div className="flex items-center space-x-2 text-sm text-secondary">
                                 <Activity className="h-4 w-4" />
                                 <span>AI-Powered Analysis</span>
                             </div>
@@ -192,10 +192,11 @@ function App() {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setCurrentView(item.id)}
-                                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                        ? `bg-gradient-to-r from-${item.color}-500 to-${item.color}-600 text-white shadow-lg`
-                                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                                        }`}
+                                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                                        isActive
+                                            ? 'bg-gray-100 text-primary shadow-sm border border-gray-200'
+                                            : 'text-secondary hover:bg-gray-50 hover:text-primary'
+                                    }`}
                                 >
                                     <Icon className="h-5 w-5" />
                                     <span className="font-medium">{item.label}</span>
