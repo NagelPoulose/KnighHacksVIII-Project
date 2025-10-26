@@ -262,9 +262,9 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                 >
                     <div className="card-modern rounded-xl p-8 max-w-md mx-auto">
                         <Brain className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-primary mb-2">Ready to Analyze</h3>
+                        <h3 className="text-xl font-semibold text-primary mb-2">Analysis Running Automatically</h3>
                         <p className="text-secondary">
-                            Click the button above to start analyzing customer patterns and emerging needs.
+                            AI analysis is running automatically. Results will appear here once complete.
                         </p>
                     </div>
                 </motion.div>

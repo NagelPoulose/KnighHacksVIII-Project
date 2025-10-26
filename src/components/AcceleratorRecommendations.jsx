@@ -259,9 +259,9 @@ const AcceleratorRecommendations = ({
                 >
                     <div className="card-modern rounded-xl p-8 max-w-md mx-auto">
                         <Lightbulb className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-primary mb-2">Ready to Recommend</h3>
+                        <h3 className="text-xl font-semibold text-primary mb-2">Generating Recommendations Automatically</h3>
                         <p className="text-secondary">
-                            Click the button above to generate AI-powered accelerator recommendations.
+                            AI is automatically generating accelerator recommendations based on pattern analysis.
                         </p>
                     </div>
                 </motion.div>

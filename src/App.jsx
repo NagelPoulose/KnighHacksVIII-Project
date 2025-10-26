@@ -51,11 +51,41 @@ function App() {
             setAnalytics(analyticsData);
 
             toast.success('Data loaded successfully!');
+            
+            // Automatically start the AI analysis pipeline
+            await runAutomaticAnalysis(processedData, csvData.accelerators);
         } catch (error) {
             console.error('Error loading data:', error);
             toast.error('Failed to load data');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const runAutomaticAnalysis = async (processedData, accelerators) => {
+        try {
+            console.log('🤖 Starting automatic AI analysis pipeline...');
+            toast.loading('Running AI analysis...', { id: 'analysis' });
+            
+            // Step 1: Pattern Analysis
+            console.log('📊 Step 1: Running pattern analysis...');
+            const aiData = dataProcessor.prepareDataForAI(processedData, accelerators);
+            const analysis = await patternAgent.analyzePatterns(aiData);
+            setPatternAnalysis(analysis);
+            console.log('✅ Pattern analysis completed:', analysis);
+            toast.success('Pattern analysis completed!', { id: 'analysis' });
+            
+            // Step 2: Generate Recommendations
+            console.log('💡 Step 2: Generating accelerator recommendations...');
+            toast.loading('Generating recommendations...', { id: 'recommendations' });
+            const recs = await recommendationAgent.recommendAccelerators(analysis, accelerators);
+            setRecommendations(recs);
+            console.log('✅ Recommendations generated:', recs);
+            toast.success('AI analysis pipeline completed!', { id: 'recommendations' });
+            
+        } catch (error) {
+            console.error('❌ Automatic analysis error:', error);
+            toast.error('AI analysis failed: ' + error.message);
         }
     };
 
