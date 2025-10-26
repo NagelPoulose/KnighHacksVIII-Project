@@ -152,6 +152,3 @@ A sophisticated AI-powered platform for analyzing customer needs and recommendin
 ## 📝 License
 
 Built for ServiceNow Hackathon 2024
-=======
-# KnighHacksVIII-Project
->>>>>>> ea69c539df65231a82142c630d42b59f370949d3

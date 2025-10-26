@@ -16,7 +16,7 @@ import Dashboard from './components/Dashboard';
 import PatternAnalysis from './components/PatternAnalysis';
 import AcceleratorRecommendations from './components/AcceleratorRecommendations';
 import Analytics from './components/Analytics';
-import { PatternAnalysisAgent, AcceleratorRecommendationAgent } from './services/aiAgents';
+import { PatternAnalysisAgent, AcceleratorRecommendationAgent } from './services/agentSystem';
 import DataProcessor from './services/dataProcessor';
 import toast, { Toaster } from 'react-hot-toast';
 
