@@ -16,7 +16,6 @@ import RequestList from './components/RequestList';
 import RequestDetail from './components/RequestDetail';
 import GapAnalysis from './components/GapAnalysis';
 import AcceleratorRecommendations from './components/AcceleratorRecommendations';
-import Analytics from './components/Analytics';
 import { AcceleratorRecommendationAgent } from './services/aiAgents';
 import DataProcessor from './services/dataProcessor';
 import UnifiedAnalyzer from './services/unifiedAnalyzer';
@@ -31,7 +30,11 @@ function App() {
     const [gapAnalysis, setGapAnalysis] = useState(null);
     const [recommendations, setRecommendations] = useState(null);
     const [analytics, setAnalytics] = useState(null);
-    const [reviewedRequests, setReviewedRequests] = useState(new Set());
+    const [reviewedRequests, setReviewedRequests] = useState(() => {
+        // Load reviewed requests from localStorage
+        const stored = localStorage.getItem('reviewedRequests');
+        return stored ? new Set(JSON.parse(stored)) : new Set();
+    });
 
     const dataProcessor = new DataProcessor();
     const unifiedAnalyzer = new UnifiedAnalyzer();
@@ -47,83 +50,38 @@ function App() {
             const csvData = await dataProcessor.loadCSVData();
             let processedData = dataProcessor.processCustomerRequests(csvData.hackData);
 
-            toast.success('Data loaded successfully!');
-            
-            // Unified AI Analysis: Classification + Matching in ONE call per request
-            console.log('🤖 Starting unified AI analysis...');
-            toast.loading('AI is analyzing requests...', { id: 'analysis' });
-            
-            const analyses = await unifiedAnalyzer.batchAnalyze(
-                processedData.slice(0, 5), // First 5 requests
-                csvData.accelerators,
-                (progress) => {
-                    toast.loading(`AI analyzing... ${progress.percentage}% (${progress.processed}/5)`, { id: 'analysis' });
+            // Check if we have cached AI analyses (from any requests, not just first 5)
+            const cachedAnalyses = [];
+            processedData.forEach(request => {
+                const cached = unifiedAnalyzer.analysisCache.get(request.number || request.id);
+                if (cached) {
+                    cachedAnalyses.push(cached);
                 }
-            );
-            
-            // Merge analyses back into requests
-            const matchResults = [];
-            processedData = processedData.map((request, index) => {
-                if (index < 5 && analyses[index]) {
-                    const analysis = analyses[index];
-                    
-                    // Store match result separately for gap analysis
-                    matchResults.push({
-                        requestId: request.number || request.id,
-                        canBeFulfilled: analysis.canBeFulfilled,
-                        matchingAccelerators: analysis.matchingAccelerators,
-                        overallConfidence: analysis.overallConfidence,
-                        gapAnalysis: analysis.gapAnalysis,
-                        recommendation: analysis.recommendation,
-                        analyzedAt: analysis.analyzedAt
-                    });
-                    
-                    // Calculate gap priority
-                    let gapPriority = 'medium';
-                    let gapPriorityReasoning = '';
-                    
-                    if (!analysis.canBeFulfilled || analysis.overallConfidence < 30) {
-                        gapPriority = 'high';
-                        gapPriorityReasoning = `High gap priority - No existing accelerators can handle this (${analysis.overallConfidence}% confidence). Critical gap in catalog.`;
-                    } else if (analysis.overallConfidence < 60) {
-                        gapPriority = 'medium';
-                        gapPriorityReasoning = `Medium gap priority - Partial coverage (${analysis.overallConfidence}% confidence). Some gaps remain.`;
-                    } else {
-                        gapPriority = 'low';
-                        gapPriorityReasoning = `Low gap priority - Good coverage (${analysis.overallConfidence}% confidence). Can be fulfilled.`;
-                    }
-                    
-                    return {
-                        ...request,
-                        // Classification fields
-                        priority: analysis.priority,
-                        priorityReasoning: analysis.priorityReasoning,
-                        complexity: analysis.complexity,
-                        complexityReasoning: analysis.complexityReasoning,
-                        category: analysis.category,
-                        categoryReasoning: analysis.categoryReasoning,
-                        classificationConfidence: analysis.classificationConfidence,
-                        // Matching fields
-                        matchResult: {
-                            requestId: request.number || request.id,
-                            canBeFulfilled: analysis.canBeFulfilled,
-                            matchingAccelerators: analysis.matchingAccelerators,
-                            overallConfidence: analysis.overallConfidence,
-                            gapAnalysis: analysis.gapAnalysis,
-                            recommendation: analysis.recommendation,
-                            analyzedAt: analysis.analyzedAt
-                        },
-                        // Gap priority
-                        gapPriority,
-                        gapPriorityReasoning
-                    };
-                }
-                return request;
             });
-            
-            setMatchResults(matchResults);
-            toast.success('AI analysis complete!', { id: 'analysis' });
-            
+
+            // Apply cached analyses if we have them
+            if (cachedAnalyses.length > 0) {
+                console.log(`✅ Loaded ${cachedAnalyses.length} cached analyses`);
+                processedData = applyAnalysesToRequests(processedData, cachedAnalyses);
+                
+                const matchResultsFromCache = cachedAnalyses.map(a => ({
+                    requestId: a.requestId,
+                    canBeFulfilled: a.canBeFulfilled,
+                    matchingAccelerators: a.matchingAccelerators,
+                    overallConfidence: a.overallConfidence,
+                    gapAnalysis: a.gapAnalysis,
+                    recommendation: a.recommendation,
+                    analyzedAt: a.analyzedAt
+                }));
+                
+                setMatchResults(matchResultsFromCache);
+                
+                const gaps = analyzeGaps(matchResultsFromCache);
+                setGapAnalysis(gaps);
+                
+                toast.success(`Loaded ${cachedAnalyses.length} cached AI analyses!`);
+            }
+
             const analyticsData = dataProcessor.getAnalyticsData(processedData);
 
             setData({
@@ -133,16 +91,7 @@ function App() {
             });
             setAnalytics(analyticsData);
 
-            // Analyze gaps
-            if (matchResults.length > 0) {
-                const gaps = this.analyzeGaps(matchResults);
-                setGapAnalysis(gaps);
-                
-                // Generate recommendations
-                if (gaps.unmatched.count > 0) {
-                    await generateRecommendationsFromGaps(gaps, csvData.accelerators);
-                }
-            }
+            toast.success('Data loaded successfully!');
         } catch (error) {
             console.error('Error loading data:', error);
             toast.error('Failed to load data');
@@ -150,75 +99,30 @@ function App() {
             setIsLoading(false);
         }
     };
-    
-    analyzeGaps(matchResults) {
-        const unmatched = matchResults.filter(r => !r.canBeFulfilled || r.overallConfidence < 50);
-        const partiallyMatched = matchResults.filter(r => 
-            r.canBeFulfilled && 
-            r.overallConfidence >= 50 && 
-            r.overallConfidence < 80
-        );
-        const fullyMatched = matchResults.filter(r => r.canBeFulfilled && r.overallConfidence >= 80);
-        
-        return {
-            total: matchResults.length,
-            unmatched: {
-                count: unmatched.length,
-                percentage: Math.round((unmatched.length / matchResults.length) * 100),
-                requests: unmatched
-            },
-            partiallyMatched: {
-                count: partiallyMatched.length,
-                percentage: Math.round((partiallyMatched.length / matchResults.length) * 100),
-                requests: partiallyMatched
-            },
-            fullyMatched: {
-                count: fullyMatched.length,
-                percentage: Math.round((fullyMatched.length / matchResults.length) * 100),
-                requests: fullyMatched
-            },
-            averageConfidence: matchResults.length > 0 ? Math.round(
-                matchResults.reduce((sum, r) => sum + r.overallConfidence, 0) / matchResults.length
-            ) : 0
-        };
-    }
 
+    const generateRecommendations = async () => {
+        if (!patternAnalysis) {
+            toast.error('Please run pattern analysis first');
+            return;
+        }
 
-    const generateRecommendationsFromGaps = async (gaps, accelerators) => {
+        setIsLoading(true);
         try {
-            console.log('💡 Generating recommendations from gaps...');
-            toast.loading('Generating accelerator recommendations...', { id: 'recommendations' });
-
-            // Prepare gap data for AI
-            const gapSummary = {
-                unmatchedCount: gaps.unmatched.count,
-                unmatchedRequests: gaps.unmatched.requests.slice(0, 20),
-                partiallyMatchedCount: gaps.partiallyMatched.count,
-                categories: {}
-            };
-
-            // Group unmatched by category
-            gaps.unmatched.requests.forEach(req => {
-                const cat = req.category || 'General';
-                gapSummary.categories[cat] = (gapSummary.categories[cat] || 0) + 1;
-            });
-
             const recs = await recommendationAgent.recommendAccelerators(
-                gapSummary,
-                accelerators
+                patternAnalysis,
+                data.accelerators
             );
             setRecommendations(recs);
-            console.log('✅ Recommendations generated:', recs);
-            toast.success('Accelerator recommendations generated!', { id: 'recommendations' });
-
+            toast.success('Accelerator recommendations generated!');
         } catch (error) {
             console.error('Recommendation error:', error);
-            toast.error('Failed to generate recommendations', { id: 'recommendations' });
+            toast.error('Failed to generate recommendations');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleSelectRequest = (request) => {
-        // Mark request as reviewed when viewing it
         const matchResult = matchResults?.find(m => 
             m.requestId === (request.id || request.number)
         );
@@ -234,18 +138,24 @@ function App() {
         const requestId = request.id || request.number;
         
         if (markAsReviewed) {
-            setReviewedRequests(prev => new Set([...prev, requestId]));
+            setReviewedRequests(prev => {
+                const newSet = new Set([...prev, requestId]);
+                // Save to localStorage
+                localStorage.setItem('reviewedRequests', JSON.stringify([...newSet]));
+                return newSet;
+            });
             toast.success('Request marked as reviewed');
         } else {
             setReviewedRequests(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(requestId);
+                // Save to localStorage
+                localStorage.setItem('reviewedRequests', JSON.stringify([...newSet]));
                 return newSet;
             });
             toast.success('Request unmarked as reviewed');
         }
         
-        // Update the selected request
         if (selectedRequest && (selectedRequest.id || selectedRequest.number) === requestId) {
             setSelectedRequest(prev => ({ ...prev, reviewed: markAsReviewed }));
         }
@@ -255,12 +165,152 @@ function App() {
         setSelectedRequest(null);
     };
 
+    const runAIAnalysis = async () => {
+        if (!data) {
+            toast.error('Please wait for data to load first');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            console.log('🤖 Starting unified AI analysis...');
+            toast.loading('AI is analyzing requests...', { id: 'analysis' });
+            
+            // Pick 5 random requests from ALL requests
+            const shuffled = [...data.requests].sort(() => Math.random() - 0.5);
+            const random5 = shuffled.slice(0, 5);
+            
+            console.log('🎲 Selected random requests:', random5.map(r => r.number || r.id));
+            
+            const analyses = await unifiedAnalyzer.batchAnalyze(
+                random5,
+                data.accelerators,
+                (progress) => {
+                    toast.loading(`AI analyzing... ${progress.percentage}% (${progress.processed}/5)`, { id: 'analysis' });
+                }
+            );
+            
+            console.log('✅ Analyses received:', analyses);
+            console.log('✅ First analysis sample:', JSON.stringify(analyses[0], null, 2));
+            
+            const updatedRequests = applyAnalysesToRequests(data.requests, analyses);
+            
+            const matchResultsArray = analyses.map(a => ({
+                requestId: a.requestId,
+                canBeFulfilled: a.canBeFulfilled,
+                matchingAccelerators: a.matchingAccelerators,
+                overallConfidence: a.overallConfidence,
+                gapAnalysis: a.gapAnalysis,
+                recommendation: a.recommendation,
+                analyzedAt: a.analyzedAt
+            }));
+            
+            console.log('✅ Match results array:', matchResultsArray);
+            
+            setMatchResults(matchResultsArray);
+            setData(prev => ({ ...prev, requests: updatedRequests }));
+            toast.success('AI analysis complete!', { id: 'analysis' });
+            
+            const gaps = analyzeGaps(matchResultsArray);
+            setGapAnalysis(gaps);
+        } catch (error) {
+            console.error('❌ AI analysis error:', error);
+            toast.error('AI analysis failed: ' + error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const applyAnalysesToRequests = (requests, analyses) => {
+        // Create a map of analyses by requestId for fast lookup
+        const analysesMap = new Map();
+        analyses.forEach(analysis => {
+            analysesMap.set(analysis.requestId, analysis);
+        });
+        
+        return requests.map((request) => {
+            const requestId = request.number || request.id;
+            const analysis = analysesMap.get(requestId);
+            
+            if (analysis) {
+                return {
+                    ...request,
+                    priority: analysis.priority,
+                    priorityReasoning: analysis.priorityReasoning,
+                    complexity: analysis.complexity,
+                    complexityReasoning: analysis.complexityReasoning,
+                    category: analysis.category,
+                    categoryReasoning: analysis.categoryReasoning,
+                    classificationConfidence: analysis.classificationConfidence,
+                    matchResult: {
+                        requestId: requestId,
+                        canBeFulfilled: analysis.canBeFulfilled,
+                        matchingAccelerators: analysis.matchingAccelerators,
+                        overallConfidence: analysis.overallConfidence,
+                        gapAnalysis: analysis.gapAnalysis,
+                        recommendation: analysis.recommendation,
+                        analyzedAt: analysis.analyzedAt
+                    }
+                };
+            }
+            return request;
+        });
+    };
+
+    const generateRecommendationsFromGaps = async (gaps, accelerators) => {
+        if (!gaps || !accelerators) return;
+        
+        try {
+            const gapSummary = {
+                unmatchedCount: gaps.unmatched?.count || 0,
+                unmatchedRequests: gaps.unmatched?.requests?.slice(0, 20) || [],
+                partiallyMatchedCount: gaps.partiallyMatched?.count || 0
+            };
+
+            const recs = await recommendationAgent.recommendAccelerators(gapSummary, accelerators);
+            setRecommendations(recs);
+        } catch (error) {
+            console.error('Recommendation error:', error);
+        }
+    };
+
+    const analyzeGaps = (matchResults) => {
+        const unmatched = matchResults.filter(r => !r.canBeFulfilled || r.overallConfidence < 50);
+        const partiallyMatched = matchResults.filter(r => 
+            r.canBeFulfilled && 
+            r.overallConfidence >= 50 && 
+            r.overallConfidence < 80
+        );
+        const fullyMatched = matchResults.filter(r => r.canBeFulfilled && r.overallConfidence >= 80);
+        
+        return {
+            total: matchResults.length,
+            unmatched: {
+                count: unmatched.length,
+                percentage: matchResults.length > 0 ? Math.round((unmatched.length / matchResults.length) * 100) : 0,
+                requests: unmatched
+            },
+            partiallyMatched: {
+                count: partiallyMatched.length,
+                percentage: matchResults.length > 0 ? Math.round((partiallyMatched.length / matchResults.length) * 100) : 0,
+                requests: partiallyMatched
+            },
+            fullyMatched: {
+                count: fullyMatched.length,
+                percentage: matchResults.length > 0 ? Math.round((fullyMatched.length / matchResults.length) * 100) : 0,
+                requests: fullyMatched
+            },
+            averageConfidence: matchResults.length > 0 ? Math.round(
+                matchResults.reduce((sum, r) => sum + r.overallConfidence, 0) / matchResults.length
+            ) : 0
+        };
+    };
+
     const navigationItems = [
         { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'blue' },
         { id: 'requests', label: 'Customer Requests', icon: FileText, color: 'purple' },
         { id: 'gaps', label: 'Gap Analysis', icon: AlertTriangle, color: 'red' },
-        { id: 'recommendations', label: 'Recommendations', icon: Lightbulb, color: 'green' },
-        { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'orange' }
+        { id: 'recommendations', label: 'Recommendations', icon: Lightbulb, color: 'green' }
     ];
 
     // Enrich requests with review status
@@ -284,7 +334,15 @@ function App() {
 
         switch (currentView) {
             case 'dashboard':
-                return <Dashboard data={data} analytics={analytics} />;
+                return (
+                    <Dashboard 
+                        data={data} 
+                        analytics={analytics}
+                        onRunAIAnalysis={runAIAnalysis}
+                        hasAIAnalysis={matchResults && matchResults.length > 0}
+                        isLoading={isLoading}
+                    />
+                );
             case 'requests':
                 return (
                     <RequestList
@@ -310,10 +368,16 @@ function App() {
                         hasPatternAnalysis={!!gapAnalysis}
                     />
                 );
-            case 'analytics':
-                return <Analytics analytics={analytics} data={data} />;
             default:
-                return <Dashboard data={data} analytics={analytics} />;
+                return (
+                    <Dashboard 
+                        data={data} 
+                        analytics={analytics}
+                        onRunAIAnalysis={runAIAnalysis}
+                        hasAIAnalysis={matchResults && matchResults.length > 0}
+                        isLoading={isLoading}
+                    />
+                );
         }
     };
 

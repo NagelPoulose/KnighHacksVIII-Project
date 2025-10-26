@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText,
@@ -16,12 +16,26 @@ import {
 } from 'lucide-react';
 
 const RequestList = ({ requests, matchResults, onSelectRequest, onMarkReviewed }) => {
-    const [filter, setFilter] = useState('all'); // all, toReview, reviewed, matched, unmatched
+    // Load initial states from localStorage
+    const [filter, setFilter] = useState(() => {
+        return localStorage.getItem('requestListFilter') || 'all';
+    });
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [priorityMode, setPriorityMode] = useState('gap'); // 'gap' or 'business'
-    const [sortBy, setSortBy] = useState('priority'); // priority, date, match
-    const [showAiOnly, setShowAiOnly] = useState(false); // Filter to show only AI-analyzed requests
+    const [sortBy, setSortBy] = useState('priority');
+    const [showAiOnly, setShowAiOnly] = useState(() => {
+        return localStorage.getItem('showAiOnly') === 'true';
+    });
+
+    // Save states to localStorage when they change
+    useEffect(() => {
+        localStorage.setItem('showAiOnly', showAiOnly);
+    }, [showAiOnly]);
+
+
+    useEffect(() => {
+        localStorage.setItem('requestListFilter', filter);
+    }, [filter]);
 
     // Merge requests with their match results
     const enrichedRequests = requests.map(request => {
@@ -73,10 +87,8 @@ const RequestList = ({ requests, matchResults, onSelectRequest, onMarkReviewed }
         // Sort by selected criteria
         if (sortBy === 'priority') {
             const priorityOrder = { high: 3, medium: 2, low: 1 };
-            // Use gap priority or business priority based on mode
-            const priorityField = priorityMode === 'gap' ? 'gapPriority' : 'priority';
-            const aPriority = priorityOrder[a[priorityField]?.toLowerCase()] || 0;
-            const bPriority = priorityOrder[b[priorityField]?.toLowerCase()] || 0;
+            const aPriority = priorityOrder[a.priority?.toLowerCase()] || 0;
+            const bPriority = priorityOrder[b.priority?.toLowerCase()] || 0;
             return bPriority - aPriority; // High to low
         } else if (sortBy === 'match') {
             const aConfidence = a.matchResult?.overallConfidence || 0;
@@ -100,8 +112,7 @@ const RequestList = ({ requests, matchResults, onSelectRequest, onMarkReviewed }
         unmatched: enrichedRequests.filter(r => !r.matchResult?.canBeFulfilled || r.matchResult?.overallConfidence < 50).length
     };
 
-    const getPriorityBadge = (request) => {
-        const priority = priorityMode === 'gap' ? request.gapPriority : request.priority;
+    const getPriorityBadge = (priority) => {
         const priorityLower = priority?.toLowerCase();
         const styles = {
             high: 'bg-red-100 text-red-700 border-red-200',
@@ -109,11 +120,9 @@ const RequestList = ({ requests, matchResults, onSelectRequest, onMarkReviewed }
             low: 'bg-green-100 text-green-700 border-green-200'
         };
         
-        const label = priorityMode === 'gap' ? 'Gap Priority' : 'Business Priority';
-        
         return (
             <span className={`px-2 py-1 rounded text-xs font-medium border ${styles[priorityLower] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                {priority ? `${priority.charAt(0).toUpperCase() + priority.slice(1)} ${label}` : `No ${label}`}
+                {priority ? `${priority.charAt(0).toUpperCase() + priority.slice(1)} Priority` : 'No Priority'}
             </span>
         );
     };
@@ -217,49 +226,6 @@ const RequestList = ({ requests, matchResults, onSelectRequest, onMarkReviewed }
                 <div className="card-modern p-4 text-center">
                     <div className="text-2xl font-bold text-red-600">{stats.unmatched}</div>
                     <div className="text-sm text-secondary">Unmatched</div>
-                </div>
-            </motion.div>
-
-            {/* Priority Mode Tabs */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="card-modern p-6"
-            >
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-lg font-semibold text-primary mb-2">Priority View</h3>
-                        <p className="text-sm text-secondary">Choose how to prioritize requests</p>
-                    </div>
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => setPriorityMode('gap')}
-                            className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                                priorityMode === 'gap'
-                                    ? 'bg-red-600 text-white shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                        >
-                            <div className="flex flex-col items-center">
-                                <span className="text-sm">📊 Gap Priority</span>
-                                <span className="text-xs mt-1 opacity-80">What we CAN'T do</span>
-                            </div>
-                        </button>
-                        <button
-                            onClick={() => setPriorityMode('business')}
-                            className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                                priorityMode === 'business'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                        >
-                            <div className="flex flex-col items-center">
-                                <span className="text-sm">💼 Business Priority</span>
-                                <span className="text-xs mt-1 opacity-80">Urgency & Impact</span>
-                            </div>
-                        </button>
-                    </div>
                 </div>
             </motion.div>
 
@@ -436,7 +402,7 @@ const RequestList = ({ requests, matchResults, onSelectRequest, onMarkReviewed }
 
                                     {/* Badges */}
                                     <div className="flex flex-wrap items-center gap-2 mt-3">
-                                        {getPriorityBadge(request)}
+                                        {request.priority && getPriorityBadge(request.priority)}
                                         {getReviewBadge(request.reviewed)}
                                         {getMatchBadge(request.matchResult)}
                                     </div>

@@ -118,10 +118,20 @@ const RequestDetail = ({ request, matchResult, onBack, onMarkReviewed }) => {
         }
     };
 
-    // Separate matching accelerators by coverage level
+    // Separate matching accelerators by coverage level - NO OVERLAP
     const matchingAccelerators = matchResult?.matchingAccelerators || [];
-    const goodMatches = matchingAccelerators.filter(m => m.coverageLevel === 'full' || m.matchScore >= 70);
-    const partialMatches = matchingAccelerators.filter(m => m.coverageLevel === 'partial' || (m.matchScore >= 40 && m.matchScore < 70));
+    
+    // GOOD MATCHES (80+ match score): Accelerators that can fully cover the request
+    // These are accelerators with matchScore >= 80
+    const goodMatches = matchingAccelerators.filter(m => m.matchScore >= 80);
+    
+    // PARTIAL MATCHES (<80 match score): Accelerators that partially cover the request but need additional work
+    // These are all other accelerators (matchScore < 80)
+    // BUT NOT in goodMatches already
+    const partialMatches = matchingAccelerators.filter(m => 
+        !goodMatches.includes(m) && m.matchScore < 80
+    );
+    
     const hasMatches = matchingAccelerators.length > 0;
 
     return (
@@ -170,17 +180,6 @@ const RequestDetail = ({ request, matchResult, onBack, onMarkReviewed }) => {
                                 <span className="flex items-center space-x-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm font-medium">
                                     <Clock className="h-4 w-4" />
                                     <span>Pending Review</span>
-                                </span>
-                            )}
-
-                            {request.gapPriority && (
-                                <span className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium ${
-                                    request.gapPriority === 'high' ? 'bg-red-100 text-red-700' :
-                                    request.gapPriority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-green-100 text-green-700'
-                                }`}>
-                                    <Target className="h-4 w-4" />
-                                    <span className="capitalize">{request.gapPriority} Gap Priority</span>
                                 </span>
                             )}
 
