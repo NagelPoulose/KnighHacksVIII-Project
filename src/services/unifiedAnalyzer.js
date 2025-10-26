@@ -49,85 +49,118 @@ class UnifiedAnalyzer {
         }
 
         try {
-            const prompt = `
-You are an expert ServiceNow AI Agent. Analyze this customer request and perform TWO tasks in ONE response:
-
-TASK 1: CLASSIFY the request
-TASK 2: MATCH it against existing accelerators
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            const prompt = `You are analyzing a ServiceNow customer request and comparing it against ${accelerators.length} existing accelerators.
 
 CUSTOMER REQUEST:
 - Number: ${request.number || request.id || 'N/A'}
 - Title: ${request.short_description || request.title || 'N/A'}
 - Description: ${request.description || request.u_description || 'N/A'}
-- Capability Area: ${request.capability || 'N/A'}
-- Company: ${request.company || 'N/A'}
+- Capability: ${request.capability || 'N/A'}
 
-EXISTING ACCELERATORS (${accelerators.length} total):
+EXISTING ACCELERATORS (${accelerators.length} total - EVALUATE EACH ONE):
 ${JSON.stringify(accelerators.map(a => ({
-    name: a.name,
-    description: a.description,
-    category: a.category
+  name: a.name,
+  description: a.description,
+  category: a.category
 })), null, 2)}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR TASK - CRITICAL: You MUST evaluate EVERY SINGLE accelerator above and provide a matchScore (0-100) for each.
 
-TASK 1 - CLASSIFICATION:
-Classify the request's priority, complexity, and category with detailed reasoning:
+STEP 1 - CLASSIFICATION: Assign priority, complexity, and category based on the request text.
 
-PRIORITY (high/medium/low):
-- HIGH: Critical business operations, security risks, regulatory compliance, revenue impact, 100+ users affected, system downtime
-- MEDIUM: Team efficiency (10-100 users), flexible timeline (1-3 months), enhances existing features
-- LOW: Cosmetic/nice-to-have, <10 users, no deadline, minor enhancements
+STEP 2 - REQUIREMENTS: Extract 3-10 MUST-HAVEs (core requirements) and 0-8 NICE-TO-HAVEs (optional enhancements).
 
-COMPLEXITY (high/medium/low):
-- HIGH: Custom development, multiple integrations, architectural changes, 4+ weeks work, complex business logic
-- MEDIUM: Moderate customization (2-4 weeks), some scripting, 1-2 integrations, cross-team coordination  
-- LOW: Out-of-box features, simple config (<1 week), minimal code, uses existing accelerators
+STEP 3 - ACCELERATOR EVALUATION (THIS IS CRITICAL):
+For EACH of the ${accelerators.length} accelerators listed above:
+- Compare it against the customer request requirements
+- Calculate matchScore (0-100) based on how well it covers the MUST-HAVEs and NICE-TO-HAVEs
+- Provide reasoning for why this accelerator matches or doesn't match
+- Match score should be:
+  * 80-100: Excellent match - covers most MUST-HAVEs
+  * 50-79: Partial match - covers some requirements
+  * 0-49: Poor match - minimal or no relevant overlap
 
-CATEGORY: Automation, Integration, Reporting, Security, User Experience, or General
+STEP 4 - SELECTION: From the accelerators you evaluated, select the best combination (0-N) that together fulfill the request with minimal redundancy.
 
-TASK 2 - MATCHING:
-Analyze which existing accelerators (if any) can fulfill this request. For each relevant accelerator:
-- Provide match score (0-100)
-- Explain HOW it helps (specific reasoning)
-- Assess coverage level (full/partial/minimal)
-- Identify what's MISSING (gap analysis)
+STEP 5 - DECISION: Can this request be fulfilled by existing accelerators? If yes, how? If no, what's missing?
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Respond in this EXACT JSON format:
+RETURN JSON ONLY (no markdown):
 {
-    "classification": {
-        "priority": "high/medium/low",
-        "priorityReasoning": "Explain WHY this priority based on user impact, timeline, business criticality",
-        "complexity": "high/medium/low",
-        "complexityReasoning": "Explain WHY this complexity based on technical requirements, integrations, development time",
-        "category": "Automation/Integration/Reporting/Security/User Experience/General",
-        "categoryReasoning": "Explain WHY this category was chosen",
-        "confidenceScore": 85
-    },
-    "matching": {
-        "canBeFulfilled": true,
-        "matchingAccelerators": [
-            {
-                "name": "Accelerator Name",
-                "matchScore": 85,
-                "reasoning": "Specific explanation of HOW this accelerator helps with this request",
-                "coverageLevel": "full"
-            }
-        ],
-        "overallConfidence": 85,
-        "gapAnalysis": "Detailed explanation of what aspects are NOT covered by existing accelerators",
-        "recommendation": "Should a new accelerator be created? Why or why not?"
+  "classification": {
+    "priority": "high/medium/low",
+    "priorityReasoning": "Brief explanation",
+    "complexity": "high/medium/low",
+    "complexityReasoning": "Brief explanation",
+    "category": "Automation/Integration/Reporting/Security/User Experience/General",
+    "categoryReasoning": "Brief explanation",
+    "confidenceScore": 70
+  },
+  "matching": {
+    "mustHaves": ["req1", "req2", "req3"],
+    "niceToHaves": ["opt1", "opt2"],
+    "evaluatedAccelerators": [
+      {
+        "name": "Accelerator Name",
+        "matchScore": 85,
+        "coverageLevel": "full/partial/minimal",
+        "covers": {"mustHaves": ["req1"], "niceToHaves": []},
+        "evidenceCount": 3,
+        "reasoning": "How this accelerator relates to the request",
+        "assumptions": "",
+        "disqualifiersTriggered": [],
+        "estimatedHumanEffortHours": 16,
+        "riskFlags": []
+      }
+      // MANDATORY: Include ALL ${accelerators.length} accelerators in this array
+      // Each accelerator must have a matchScore (0-100)
+      // Even if matchScore is 0, still include it with reasoning why it doesn't match
+    ],
+    "selectedAccelerators": [
+      {
+        "name": "Accelerator Name",
+        "covers": {"mustHaves": ["req1"], "niceToHaves": []},
+        "marginalUtility": 75,
+        "utilityContributionBreakdown": {
+          "coverageUtility": 80,
+          "redundancyPenalty": 2,
+          "conflictPenalty": 0,
+          "effortCost": 16,
+          "riskPenalty": 0
+        },
+        "estimatedHumanEffortHours": 16,
+        "reasoning": "Why selected"
+      }
+    ],
+    "setCoveragePercent": 85,
+    "effortCostTotalHours": 32,
+    "redundancyNotes": "",
+    "conflictNotes": "",
+    "canBeFulfilled": true,
+    "overallConfidence": 80,
+    "gapAnalysis": "Any gaps in coverage",
+    "recommendation": "Implementation plan or new accelerator proposal",
+    "implementationPlan": ["Step 1", "Step 2"],
+    "diagnostics": {
+      "stoppingCondition": "Why selection stopped",
+      "runnerUpSetUtilityMargin": "Margin vs alternative",
+      "notes": "Brief trace"
     }
+  }
 }
-`;
+
+IMPORTANT REMINDERS:
+1. You MUST include ALL ${accelerators.length} accelerators in the "evaluatedAccelerators" array
+2. Each accelerator must have a matchScore (0-100) based on how well it addresses the request requirements
+3. Match scores: 80-100 = excellent, 50-79 = partial, 0-49 = poor
+4. Return ONLY valid JSON - no markdown, no additional text
+5. Be thorough and honest in your evaluation - even accelerators with low match scores should be included`;
 
             console.log('🤖 Unified AI Analysis for:', request.number || request.id);
             const response = await this.callGoogleAI(prompt);
+            console.log('📥 Received response from Gemini, length:', response.length);
             const analysis = this.parseAnalysis(response);
+            
+            console.log('✅ Parsed analysis, keys:', Object.keys(analysis));
             
             // Add metadata
             analysis.requestId = cacheKey;
@@ -138,6 +171,7 @@ Respond in this EXACT JSON format:
             this.saveCacheToStorage();
             
             console.log('✅ Unified analysis complete for:', cacheKey);
+            console.log('✅ Cached analysis to Map, cache size:', this.analysisCache.size);
             return analysis;
             
         } catch (error) {
@@ -188,26 +222,79 @@ Respond in this EXACT JSON format:
                 }],
                 generationConfig: {
                     temperature: 0.5,
-                    maxOutputTokens: 3000
+                    maxOutputTokens: 8192
                 }
             })
         });
 
         if (!response.ok) {
             const errorText = await response.text();
+            console.error('❌ API Error Response:', errorText);
             throw new Error(`Google AI API error ${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
+        
+        // Check if finish reason is MAX_TOKENS
+        if (data.candidates && data.candidates[0] && data.candidates[0].finishReason === 'MAX_TOKENS') {
+            console.warn('⚠️ Response hit MAX_TOKENS limit - trying to parse truncated JSON');
+        }
+        
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+            console.error('❌ Unexpected API response structure:', data);
+            throw new Error('Unexpected API response structure');
+        }
+        
+        if (!data.candidates[0].content.parts || !data.candidates[0].content.parts[0] || !data.candidates[0].content.parts[0].text) {
+            console.error('❌ No text content in response:', data);
+            throw new Error('No text content in API response');
+        }
+        
         return data.candidates[0].content.parts[0].text;
     }
 
     parseAnalysis(response) {
         try {
+            console.log('🔍 Raw AI response:', response.substring(0, 500) + '...');
+            
             // Extract JSON from response
             const jsonMatch = response.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
+                let jsonStr = jsonMatch[0];
+                
+                // Try to fix truncated JSON by closing open structures
+                try {
+                    JSON.parse(jsonStr);
+                } catch (e) {
+                    console.warn('⚠️ JSON is truncated, attempting to fix...');
+                    // Try to close the JSON properly
+                    let openBraces = (jsonStr.match(/\{/g) || []).length;
+                    let closeBraces = (jsonStr.match(/\}/g) || []).length;
+                    let openBrackets = (jsonStr.match(/\[/g) || []).length;
+                    let closeBrackets = (jsonStr.match(/\]/g) || []).length;
+                    
+                    // Add missing closing brackets/braces
+                    jsonStr += ']'.repeat(Math.max(0, openBrackets - closeBrackets));
+                    jsonStr += '}'.repeat(Math.max(0, openBraces - closeBraces));
+                    console.log('🔧 Attempted to fix JSON');
+                }
+                
+                const parsed = JSON.parse(jsonStr);
+                console.log('✅ Parsed JSON successfully');
+                
+                // Transform selectedAccelerators to old format for compatibility
+                const selectedAccelerators = parsed.matching?.selectedAccelerators || [];
+                const transformedAccelerators = selectedAccelerators.map(acc => ({
+                    name: acc.name,
+                    matchScore: acc.utilityContributionBreakdown?.coverageUtility || 70,
+                    reasoning: acc.reasoning || 'Selected based on utility analysis',
+                    coverageLevel: acc.coverageLevel || 'partial',
+                    marginalUtility: acc.marginalUtility,
+                    estimatedEffortHours: acc.estimatedHumanEffortHours
+                }));
+                
+                console.log('📊 Transformed accelerators:', transformedAccelerators.length);
+                
                 return {
                     // Classification data
                     priority: parsed.classification?.priority || 'medium',
@@ -218,9 +305,21 @@ Respond in this EXACT JSON format:
                     categoryReasoning: parsed.classification?.categoryReasoning || 'No reasoning provided',
                     classificationConfidence: parsed.classification?.confidenceScore || 70,
                     
-                    // Matching data
+                    // Matching data (new format)
+                    mustHaves: parsed.matching?.mustHaves || [],
+                    niceToHaves: parsed.matching?.niceToHaves || [],
+                    evaluatedAccelerators: parsed.matching?.evaluatedAccelerators || [],
+                    selectedAccelerators: transformedAccelerators,
+                    setCoveragePercent: parsed.matching?.setCoveragePercent || 0,
+                    effortCostTotalHours: parsed.matching?.effortCostTotalHours || 0,
+                    redundancyNotes: parsed.matching?.redundancyNotes || '',
+                    conflictNotes: parsed.matching?.conflictNotes || '',
+                    implementationPlan: parsed.matching?.implementationPlan || [],
+                    diagnostics: parsed.matching?.diagnostics || {},
+                    
+                    // Legacy compatibility fields
                     canBeFulfilled: parsed.matching?.canBeFulfilled || false,
-                    matchingAccelerators: parsed.matching?.matchingAccelerators || [],
+                    matchingAccelerators: transformedAccelerators,
                     overallConfidence: parsed.matching?.overallConfidence || 0,
                     gapAnalysis: parsed.matching?.gapAnalysis || 'No gap analysis provided',
                     recommendation: parsed.matching?.recommendation || 'No recommendation provided'
@@ -228,7 +327,8 @@ Respond in this EXACT JSON format:
             }
             throw new Error('No JSON found in response');
         } catch (error) {
-            console.error('Error parsing unified analysis:', error);
+            console.error('❌ Error parsing unified analysis:', error);
+            console.error('Response was:', response.substring(0, 1000));
             throw error;
         }
     }

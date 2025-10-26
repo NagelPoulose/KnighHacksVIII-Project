@@ -8,11 +8,13 @@ import {
     BarChart3,
     Activity,
     Zap,
-    ArrowUpRight
+    ArrowUpRight,
+    Brain,
+    RefreshCw
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const Dashboard = ({ data, analytics }) => {
+const Dashboard = ({ data, analytics, onRunAIAnalysis, hasAIAnalysis, isLoading }) => {
     if (!data || !analytics) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -73,10 +75,84 @@ const Dashboard = ({ data, analytics }) => {
 
     return (
         <div className="space-y-8">
+            {/* AI Analysis Control */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="card-modern p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200"
+            >
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <div className="p-3 bg-purple-600 rounded-xl">
+                            <Brain className="h-8 w-8 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-primary">AI Analysis</h3>
+                            <p className="text-sm text-secondary">
+                                {hasAIAnalysis 
+                                    ? 'AI analysis loaded from cache - ready to view!' 
+                                    : 'Run Google Gemini AI to analyze first 5 requests'}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                                if (confirm('Clear AI analysis cache? This will require re-running analysis.')) {
+                                    localStorage.removeItem('unifiedAnalysis');
+                                    window.location.reload();
+                                }
+                            }}
+                            className="px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 bg-red-600 text-white hover:bg-red-700"
+                        >
+                            <span>Clear Cache</span>
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={onRunAIAnalysis}
+                            disabled={isLoading}
+                            className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${
+                                hasAIAnalysis
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    <span>Analyzing...</span>
+                                </>
+                            ) : hasAIAnalysis ? (
+                                <>
+                                    <RefreshCw className="h-5 w-5" />
+                                    <span>Re-run AI Analysis</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Brain className="h-5 w-5" />
+                                    <span>Run AI Analysis</span>
+                                </>
+                            )}
+                        </motion.button>
+                    </div>
+                </div>
+                {hasAIAnalysis && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-800">
+                            ✅ <strong>5 requests analyzed</strong> - Results cached. Go to "Customer Requests" and check "Show Only AI-Analyzed" to view them!
+                        </p>
+                    </div>
+                )}
+            </motion.div>
+
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
                 className="text-center mb-12"
             >
                 <h1 className="text-4xl font-bold text-primary mb-4">
