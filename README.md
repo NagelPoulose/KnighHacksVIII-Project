@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ServiceNow AI Accelerator Hub
 
 A sophisticated AI-powered platform for analyzing customer needs and recommending new ServiceNow accelerators. Built for the ServiceNow hackathon with two specialized AI agents and a beautiful React interface.
@@ -51,10 +50,27 @@ A sophisticated AI-powered platform for analyzing customer needs and recommendin
 
 ## 🔧 Configuration
 
-The application uses your Google AI API key:
-```
-AIzaSyDuCk1PkdQ2Jbdd7LAxP1xb6qDH-RHh8mQ
-```
+### Environment Variables
+
+1. **Copy the environment template**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Get your Google AI API key**
+   - Visit: https://aistudio.google.com/app/apikey
+   - Create a new API key
+   - Copy the key
+
+3. **Add your API key to .env**
+   ```bash
+   VITE_GOOGLE_API_KEY=your_actual_api_key_here
+   ```
+
+### Security Note
+- Never commit your `.env` file to version control
+- The `.env` file is already in `.gitignore`
+- Use `.env.example` as a template for others
 
 ## 📊 Data Sources
 

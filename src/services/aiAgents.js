@@ -1,5 +1,5 @@
 // AI Agents for ServiceNow Accelerator Analysis
-const GOOGLE_API_KEY = 'AIzaSyDuCk1PkdQ2Jbdd7LAxP1xb6qDH-RHh8mQ';
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 class PatternAnalysisAgent {
     constructor() {
