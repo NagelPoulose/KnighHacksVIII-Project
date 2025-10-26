@@ -9,25 +9,47 @@ class PatternAnalysisAgent {
 
     async analyzePatterns(customerData) {
         try {
+            const startTime = Date.now();
+            
+            // Enhanced prompt with confidence scoring requirements
             const prompt = `
         As a ServiceNow Pattern Analysis Agent, analyze the following customer data to identify emerging needs and patterns:
         
-        Customer Data: ${JSON.stringify(customerData, null, 2)}
+        Customer Data Summary:
+        - Total Requests: ${customerData.summary.totalRequests}
+        - Top Categories: ${customerData.summary.topCategories.join(', ')}
+        - Common Tags: ${customerData.summary.commonTags.map(t => t.tag).join(', ')}
+        - Sentiment Distribution: ${JSON.stringify(customerData.summary.sentimentDistribution)}
         
-        Please provide:
-        1. Top 5 emerging customer needs
-        2. Pattern analysis of common pain points
-        3. Trend analysis of customer requests
-        4. Gap analysis in current offerings
-        5. Priority recommendations for new accelerators
+        Sample Requests: ${JSON.stringify(customerData.customerRequests.slice(0, 30), null, 2)}
+        
+        Please provide a comprehensive analysis with confidence scores (0-100):
+        1. Top 5 emerging customer needs with confidence scores
+        2. Pattern analysis of common pain points with frequency metrics
+        3. Trend analysis with directional indicators
+        4. Gap analysis in current offerings with severity ratings
+        5. Priority recommendations with urgency levels
         
         Format your response as a JSON object with these exact keys:
         {
-            "emergingNeeds": ["need1", "need2", "need3", "need4", "need5"],
-            "patterns": ["pattern1", "pattern2", "pattern3", "pattern4", "pattern5"],
-            "trends": ["trend1", "trend2", "trend3", "trend4", "trend5"],
-            "gaps": ["gap1", "gap2", "gap3", "gap4", "gap5"],
-            "recommendations": ["rec1", "rec2", "rec3", "rec4", "rec5"]
+            "emergingNeeds": [
+                {"need": "description", "confidence": 85, "frequency": 45, "category": "automation"}
+            ],
+            "patterns": [
+                {"pattern": "description", "confidence": 90, "occurrences": 32, "impact": "high"}
+            ],
+            "trends": [
+                {"trend": "description", "direction": "increasing", "strength": 80, "timeframe": "3-6 months"}
+            ],
+            "gaps": [
+                {"gap": "description", "severity": "high", "affectedCustomers": 25, "confidence": 85}
+            ],
+            "recommendations": [
+                {"recommendation": "description", "priority": "high", "confidence": 88, "expectedImpact": "high"}
+            ],
+            "overallConfidence": 85,
+            "dataQuality": "high",
+            "sampleSize": 100
         }
       `;
 
@@ -36,10 +58,21 @@ class PatternAnalysisAgent {
             const response = await this.callGoogleAI(prompt);
             console.log('🤖 Pattern Analysis Agent - Raw response:', response);
 
-            const parsed = this.parseResponse(response);
+            const parsed = this.parseResponse(response, customerData);
+            
+            // Add performance metrics
+            const processingTime = Date.now() - startTime;
+            parsed.metrics = {
+                processingTime,
+                dataPointsAnalyzed: customerData.customerRequests.length,
+                analysisDate: new Date().toISOString(),
+                agentVersion: '2.0'
+            };
+            
             console.log('✅ Pattern Analysis Agent - Parsed response:', parsed);
             console.log('📋 Emerging Needs:', parsed.emergingNeeds);
             console.log('🔍 Patterns:', parsed.patterns);
+            console.log('📊 Confidence Score:', parsed.overallConfidence);
 
             return parsed;
         } catch (error) {

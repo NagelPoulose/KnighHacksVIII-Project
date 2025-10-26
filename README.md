@@ -80,9 +80,35 @@ A sophisticated AI-powered platform for analyzing customer needs and recommendin
 ## 🎯 Usage
 
 1. **Dashboard** - Overview of analytics and metrics
-2. **Pattern Analysis** - Run AI analysis to identify emerging needs
-3. **Recommendations** - Generate accelerator recommendations
-4. **Analytics** - Detailed insights and visualizations
+2. **Customer Requests** - Browse and review individual A2E requests
+   - Filter by review status, match quality, category
+   - Click any request for detailed analysis
+   - Mark requests as reviewed
+3. **Gap Analysis** - Identify requests that can't be fulfilled
+   - Visual breakdown of matched vs unmatched requests
+   - See critical gaps in your accelerator catalog
+4. **Recommendations** - AI-suggested new accelerators based on gaps
+   - Recommendations tied to actual unmet customer needs
+   - Business justification and implementation guidance
+5. **Analytics** - Detailed insights and visualizations
+
+## 🔄 How It Works
+
+1. **Data Loading**: Automatically loads accelerators and A2E requests from CSV files
+2. **AI Matching**: Uses Google Gemini AI to match each request to existing accelerators
+3. **Confidence Scoring**: Assigns confidence scores (0-100) to each match
+4. **Gap Identification**: Identifies requests that CAN'T be fulfilled by existing accelerators
+5. **Smart Recommendations**: AI suggests NEW accelerators to fill those gaps
+6. **Review Workflow**: Track which requests have been analyzed
+
+## ✨ New Features (Joseph Branch)
+
+- **Request-by-Request Analysis**: View each customer request individually
+- **AI Matching Engine**: Intelligent pairing of requests to accelerators
+- **Confidence Metrics**: Quantified match quality for every request
+- **Review System**: Mark requests as reviewed/to review
+- **Gap Analysis Dashboard**: Visual identification of unmet needs
+- **Gap-Driven Recommendations**: New accelerators based on actual gaps
 
 ## 🏆 Hackathon Features
 

@@ -68,19 +68,85 @@ class DataProcessor {
     }
 
     processCustomerRequests(hackData) {
-        return hackData.map(item => ({
-            id: item.id || Math.random().toString(36).substr(2, 9),
-            title: item.title || 'Untitled Request',
-            description: item.description || '',
-            category: item.category || 'General',
-            priority: item.priority || 'Medium',
-            company: item.company || 'Unknown',
-            status: item.status || 'Open',
-            createdAt: item.created_at || new Date().toISOString(),
-            tags: this.extractTags(item.description || ''),
-            sentiment: this.analyzeSentiment(item.description || ''),
-            complexity: this.assessComplexity(item.description || '')
-        }));
+        return hackData.map(item => {
+            const description = item.description || '';
+            const capability = item.capability || '';
+            const primaryCategory = item.primary_category || '';
+            
+            return {
+                id: item.number || item.id || Math.random().toString(36).substr(2, 9),
+                number: item.number,
+                title: item.initiative_title || item.title || 'Untitled Request',
+                short_description: item.initiative_title || item.title,
+                description: description,
+                category: this.categorizeRequest(capability, primaryCategory, description),
+                priority: this.assessPriority(description, primaryCategory, capability),
+                company: item.company || 'Unknown',
+                status: item.status || 'Open',
+                createdAt: item.created_at || new Date().toISOString(),
+                tags: this.extractTags(description),
+                sentiment: this.analyzeSentiment(description),
+                complexity: this.assessComplexity(description, capability),
+                capability: capability,
+                primary_category: primaryCategory
+            };
+        });
+    }
+
+    categorizeRequest(capability, primaryCategory, description) {
+        const text = `${capability} ${description}`.toLowerCase();
+        
+        // Check for specific categories based on capability and description
+        if (text.includes('integration') || text.includes('sync') || text.includes('api') || text.includes('external')) {
+            return 'Integration';
+        }
+        if (text.includes('automat') || text.includes('workflow') || text.includes('orchestration')) {
+            return 'Automation';
+        }
+        if (text.includes('report') || text.includes('dashboard') || text.includes('analytic') || text.includes('visualization')) {
+            return 'Reporting';
+        }
+        if (text.includes('security') || text.includes('access') || text.includes('authentication') || text.includes('password')) {
+            return 'Security';
+        }
+        if (text.includes('user experience') || text.includes('portal') || text.includes('ui') || text.includes('interface')) {
+            return 'User Experience';
+        }
+        
+        return 'General';
+    }
+
+    assessPriority(description, primaryCategory, capability) {
+        const text = `${description} ${capability}`.toLowerCase();
+        
+        // High priority indicators
+        const highPriorityKeywords = [
+            'critical', 'urgent', 'security', 'downtime', 'outage', 'failure', 
+            'blocking', 'compliance', 'regulatory', 'breach', 'crash', 'production'
+        ];
+        
+        // Low priority indicators
+        const lowPriorityKeywords = [
+            'enhancement', 'cosmetic', 'nice to have', 'future', 'consider',
+            'optimize', 'improve user experience', 'minor'
+        ];
+        
+        const highCount = highPriorityKeywords.filter(keyword => text.includes(keyword)).length;
+        const lowCount = lowPriorityKeywords.filter(keyword => text.includes(keyword)).length;
+        
+        // Check if it's technical how-to (usually medium priority)
+        const isTechnicalHowTo = primaryCategory?.toLowerCase().includes('technical how-to');
+        
+        // Determine priority
+        if (highCount >= 2) return 'high';
+        if (lowCount >= 1) return 'low';
+        if (isTechnicalHowTo) return 'medium';
+        
+        // Default based on context
+        if (text.includes('password reset') || text.includes('access')) return 'medium';
+        if (text.includes('beta') || text.includes('feedback')) return 'low';
+        
+        return 'medium'; // Default
     }
 
     extractTags(description) {
@@ -111,19 +177,35 @@ class DataProcessor {
         return 'neutral';
     }
 
-    assessComplexity(description) {
-        const complexityIndicators = [
-            'integration', 'automation', 'workflow', 'api', 'database',
-            'security', 'performance', 'scalability', 'multi-system'
+    assessComplexity(description, capability) {
+        const text = `${description} ${capability}`.toLowerCase();
+        
+        // High complexity indicators
+        const highComplexityKeywords = [
+            'integration', 'multi-system', 'custom development', 'architecture',
+            'migration', 'scalability', 'performance optimization', 'complex workflow',
+            'multiple platforms', 'api development', 'data sync', 'enterprise-wide'
         ];
-
-        const indicatorCount = complexityIndicators.filter(indicator =>
-            description.toLowerCase().includes(indicator)
-        ).length;
-
-        if (indicatorCount >= 4) return 'high';
-        if (indicatorCount >= 2) return 'medium';
-        return 'low';
+        
+        // Low complexity indicators  
+        const lowComplexityKeywords = [
+            'configuration', 'enable', 'disable', 'simple', 'basic',
+            'standard', 'out-of-box', 'reset', 'view-only', 'guidance'
+        ];
+        
+        const highCount = highComplexityKeywords.filter(keyword => text.includes(keyword)).length;
+        const lowCount = lowComplexityKeywords.filter(keyword => text.includes(keyword)).length;
+        
+        // Check for medium complexity indicators
+        const mediumKeywords = ['automation', 'workflow', 'reporting', 'dashboard', 'role-based'];
+        const mediumCount = mediumKeywords.filter(keyword => text.includes(keyword)).length;
+        
+        // Determine complexity
+        if (highCount >= 2) return 'high';
+        if (lowCount >= 2) return 'low';
+        if (mediumCount >= 1 || highCount === 1) return 'medium';
+        
+        return 'low'; // Default to low if no strong indicators
     }
 
     getAnalyticsData(processedData) {

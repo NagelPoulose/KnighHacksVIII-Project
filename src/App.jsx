@@ -5,31 +5,36 @@ import {
     Lightbulb,
     TrendingUp,
     BarChart3,
-    Users,
-    Target,
+    FileText,
+    AlertTriangle,
     Zap,
     ChevronRight,
-    Sparkles,
     Activity
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
-import PatternAnalysis from './components/PatternAnalysis';
+import RequestList from './components/RequestList';
+import RequestDetail from './components/RequestDetail';
+import GapAnalysis from './components/GapAnalysis';
 import AcceleratorRecommendations from './components/AcceleratorRecommendations';
 import Analytics from './components/Analytics';
-import { PatternAnalysisAgent, AcceleratorRecommendationAgent } from './services/aiAgents';
+import { AcceleratorRecommendationAgent } from './services/aiAgents';
 import DataProcessor from './services/dataProcessor';
+import UnifiedAnalyzer from './services/unifiedAnalyzer';
 import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
     const [currentView, setCurrentView] = useState('dashboard');
+    const [selectedRequest, setSelectedRequest] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [data, setData] = useState(null);
-    const [patternAnalysis, setPatternAnalysis] = useState(null);
+    const [matchResults, setMatchResults] = useState(null);
+    const [gapAnalysis, setGapAnalysis] = useState(null);
     const [recommendations, setRecommendations] = useState(null);
     const [analytics, setAnalytics] = useState(null);
+    const [reviewedRequests, setReviewedRequests] = useState(new Set());
 
     const dataProcessor = new DataProcessor();
-    const patternAgent = new PatternAnalysisAgent();
+    const unifiedAnalyzer = new UnifiedAnalyzer();
     const recommendationAgent = new AcceleratorRecommendationAgent();
 
     useEffect(() => {
@@ -40,7 +45,85 @@ function App() {
         setIsLoading(true);
         try {
             const csvData = await dataProcessor.loadCSVData();
-            const processedData = dataProcessor.processCustomerRequests(csvData.hackData);
+            let processedData = dataProcessor.processCustomerRequests(csvData.hackData);
+
+            toast.success('Data loaded successfully!');
+            
+            // Unified AI Analysis: Classification + Matching in ONE call per request
+            console.log('🤖 Starting unified AI analysis...');
+            toast.loading('AI is analyzing requests...', { id: 'analysis' });
+            
+            const analyses = await unifiedAnalyzer.batchAnalyze(
+                processedData.slice(0, 5), // First 5 requests
+                csvData.accelerators,
+                (progress) => {
+                    toast.loading(`AI analyzing... ${progress.percentage}% (${progress.processed}/5)`, { id: 'analysis' });
+                }
+            );
+            
+            // Merge analyses back into requests
+            const matchResults = [];
+            processedData = processedData.map((request, index) => {
+                if (index < 5 && analyses[index]) {
+                    const analysis = analyses[index];
+                    
+                    // Store match result separately for gap analysis
+                    matchResults.push({
+                        requestId: request.number || request.id,
+                        canBeFulfilled: analysis.canBeFulfilled,
+                        matchingAccelerators: analysis.matchingAccelerators,
+                        overallConfidence: analysis.overallConfidence,
+                        gapAnalysis: analysis.gapAnalysis,
+                        recommendation: analysis.recommendation,
+                        analyzedAt: analysis.analyzedAt
+                    });
+                    
+                    // Calculate gap priority
+                    let gapPriority = 'medium';
+                    let gapPriorityReasoning = '';
+                    
+                    if (!analysis.canBeFulfilled || analysis.overallConfidence < 30) {
+                        gapPriority = 'high';
+                        gapPriorityReasoning = `High gap priority - No existing accelerators can handle this (${analysis.overallConfidence}% confidence). Critical gap in catalog.`;
+                    } else if (analysis.overallConfidence < 60) {
+                        gapPriority = 'medium';
+                        gapPriorityReasoning = `Medium gap priority - Partial coverage (${analysis.overallConfidence}% confidence). Some gaps remain.`;
+                    } else {
+                        gapPriority = 'low';
+                        gapPriorityReasoning = `Low gap priority - Good coverage (${analysis.overallConfidence}% confidence). Can be fulfilled.`;
+                    }
+                    
+                    return {
+                        ...request,
+                        // Classification fields
+                        priority: analysis.priority,
+                        priorityReasoning: analysis.priorityReasoning,
+                        complexity: analysis.complexity,
+                        complexityReasoning: analysis.complexityReasoning,
+                        category: analysis.category,
+                        categoryReasoning: analysis.categoryReasoning,
+                        classificationConfidence: analysis.classificationConfidence,
+                        // Matching fields
+                        matchResult: {
+                            requestId: request.number || request.id,
+                            canBeFulfilled: analysis.canBeFulfilled,
+                            matchingAccelerators: analysis.matchingAccelerators,
+                            overallConfidence: analysis.overallConfidence,
+                            gapAnalysis: analysis.gapAnalysis,
+                            recommendation: analysis.recommendation,
+                            analyzedAt: analysis.analyzedAt
+                        },
+                        // Gap priority
+                        gapPriority,
+                        gapPriorityReasoning
+                    };
+                }
+                return request;
+            });
+            
+            setMatchResults(matchResults);
+            toast.success('AI analysis complete!', { id: 'analysis' });
+            
             const analyticsData = dataProcessor.getAnalyticsData(processedData);
 
             setData({
@@ -50,10 +133,16 @@ function App() {
             });
             setAnalytics(analyticsData);
 
-            toast.success('Data loaded successfully!');
-
-            // Automatically start the AI analysis pipeline
-            await runAutomaticAnalysis(processedData, csvData.accelerators);
+            // Analyze gaps
+            if (matchResults.length > 0) {
+                const gaps = this.analyzeGaps(matchResults);
+                setGapAnalysis(gaps);
+                
+                // Generate recommendations
+                if (gaps.unmatched.count > 0) {
+                    await generateRecommendationsFromGaps(gaps, csvData.accelerators);
+                }
+            }
         } catch (error) {
             console.error('Error loading data:', error);
             toast.error('Failed to load data');
@@ -61,108 +150,164 @@ function App() {
             setIsLoading(false);
         }
     };
+    
+    analyzeGaps(matchResults) {
+        const unmatched = matchResults.filter(r => !r.canBeFulfilled || r.overallConfidence < 50);
+        const partiallyMatched = matchResults.filter(r => 
+            r.canBeFulfilled && 
+            r.overallConfidence >= 50 && 
+            r.overallConfidence < 80
+        );
+        const fullyMatched = matchResults.filter(r => r.canBeFulfilled && r.overallConfidence >= 80);
+        
+        return {
+            total: matchResults.length,
+            unmatched: {
+                count: unmatched.length,
+                percentage: Math.round((unmatched.length / matchResults.length) * 100),
+                requests: unmatched
+            },
+            partiallyMatched: {
+                count: partiallyMatched.length,
+                percentage: Math.round((partiallyMatched.length / matchResults.length) * 100),
+                requests: partiallyMatched
+            },
+            fullyMatched: {
+                count: fullyMatched.length,
+                percentage: Math.round((fullyMatched.length / matchResults.length) * 100),
+                requests: fullyMatched
+            },
+            averageConfidence: matchResults.length > 0 ? Math.round(
+                matchResults.reduce((sum, r) => sum + r.overallConfidence, 0) / matchResults.length
+            ) : 0
+        };
+    }
 
-    const runAutomaticAnalysis = async (processedData, accelerators) => {
+
+    const generateRecommendationsFromGaps = async (gaps, accelerators) => {
         try {
-            console.log('🤖 Starting automatic AI analysis pipeline...');
-            toast.loading('Running AI analysis...', { id: 'analysis' });
+            console.log('💡 Generating recommendations from gaps...');
+            toast.loading('Generating accelerator recommendations...', { id: 'recommendations' });
 
-            // Step 1: Pattern Analysis
-            console.log('📊 Step 1: Running pattern analysis...');
-            const aiData = dataProcessor.prepareDataForAI(processedData, accelerators);
-            const analysis = await patternAgent.analyzePatterns(aiData);
-            setPatternAnalysis(analysis);
-            console.log('✅ Pattern analysis completed:', analysis);
-            toast.success('Pattern analysis completed!', { id: 'analysis' });
+            // Prepare gap data for AI
+            const gapSummary = {
+                unmatchedCount: gaps.unmatched.count,
+                unmatchedRequests: gaps.unmatched.requests.slice(0, 20),
+                partiallyMatchedCount: gaps.partiallyMatched.count,
+                categories: {}
+            };
 
-            // Step 2: Generate Recommendations
-            console.log('💡 Step 2: Generating accelerator recommendations...');
-            toast.loading('Generating recommendations...', { id: 'recommendations' });
-            const recs = await recommendationAgent.recommendAccelerators(analysis, accelerators);
-            setRecommendations(recs);
-            console.log('✅ Recommendations generated:', recs);
-            toast.success('AI analysis pipeline completed!', { id: 'recommendations' });
+            // Group unmatched by category
+            gaps.unmatched.requests.forEach(req => {
+                const cat = req.category || 'General';
+                gapSummary.categories[cat] = (gapSummary.categories[cat] || 0) + 1;
+            });
 
-        } catch (error) {
-            console.error('❌ Automatic analysis error:', error);
-            toast.error('AI analysis failed: ' + error.message);
-        }
-    };
-
-    const runPatternAnalysis = async () => {
-        if (!data) {
-            toast.error('No data available. Please wait for data to load.');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            console.log('Starting pattern analysis with data:', data);
-            const aiData = dataProcessor.prepareDataForAI(data.requests, data.accelerators);
-            console.log('Prepared AI data:', aiData);
-
-            const analysis = await patternAgent.analyzePatterns(aiData);
-            console.log('Pattern analysis result:', analysis);
-
-            setPatternAnalysis(analysis);
-            toast.success('Pattern analysis completed!');
-        } catch (error) {
-            console.error('Pattern analysis error:', error);
-            toast.error('Failed to run pattern analysis: ' + error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const generateRecommendations = async () => {
-        if (!patternAnalysis) {
-            toast.error('Please run pattern analysis first');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
             const recs = await recommendationAgent.recommendAccelerators(
-                patternAnalysis,
-                data.accelerators
+                gapSummary,
+                accelerators
             );
             setRecommendations(recs);
-            toast.success('Accelerator recommendations generated!');
+            console.log('✅ Recommendations generated:', recs);
+            toast.success('Accelerator recommendations generated!', { id: 'recommendations' });
+
         } catch (error) {
             console.error('Recommendation error:', error);
-            toast.error('Failed to generate recommendations');
-        } finally {
-            setIsLoading(false);
+            toast.error('Failed to generate recommendations', { id: 'recommendations' });
         }
+    };
+
+    const handleSelectRequest = (request) => {
+        // Mark request as reviewed when viewing it
+        const matchResult = matchResults?.find(m => 
+            m.requestId === (request.id || request.number)
+        );
+        
+        setSelectedRequest({
+            ...request,
+            matchResult,
+            reviewed: reviewedRequests.has(request.id || request.number)
+        });
+    };
+
+    const handleMarkReviewed = (request, markAsReviewed = true) => {
+        const requestId = request.id || request.number;
+        
+        if (markAsReviewed) {
+            setReviewedRequests(prev => new Set([...prev, requestId]));
+            toast.success('Request marked as reviewed');
+        } else {
+            setReviewedRequests(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(requestId);
+                return newSet;
+            });
+            toast.success('Request unmarked as reviewed');
+        }
+        
+        // Update the selected request
+        if (selectedRequest && (selectedRequest.id || selectedRequest.number) === requestId) {
+            setSelectedRequest(prev => ({ ...prev, reviewed: markAsReviewed }));
+        }
+    };
+
+    const handleBackToRequests = () => {
+        setSelectedRequest(null);
     };
 
     const navigationItems = [
         { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'blue' },
-        { id: 'patterns', label: 'Pattern Analysis', icon: Brain, color: 'purple' },
+        { id: 'requests', label: 'Customer Requests', icon: FileText, color: 'purple' },
+        { id: 'gaps', label: 'Gap Analysis', icon: AlertTriangle, color: 'red' },
         { id: 'recommendations', label: 'Recommendations', icon: Lightbulb, color: 'green' },
         { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'orange' }
     ];
 
+    // Enrich requests with review status
+    const enrichedRequests = data?.requests.map(req => ({
+        ...req,
+        reviewed: reviewedRequests.has(req.id || req.number)
+    })) || [];
+
     const renderContent = () => {
+        // If a request is selected, show the detail view
+        if (selectedRequest) {
+            return (
+                <RequestDetail
+                    request={selectedRequest}
+                    matchResult={selectedRequest.matchResult}
+                    onBack={handleBackToRequests}
+                    onMarkReviewed={handleMarkReviewed}
+                />
+            );
+        }
+
         switch (currentView) {
             case 'dashboard':
                 return <Dashboard data={data} analytics={analytics} />;
-            case 'patterns':
+            case 'requests':
                 return (
-                    <PatternAnalysis
-                        analysis={patternAnalysis}
-                        onRunAnalysis={runPatternAnalysis}
-                        isLoading={isLoading}
-                        data={data}
+                    <RequestList
+                        requests={enrichedRequests}
+                        matchResults={matchResults}
+                        onSelectRequest={handleSelectRequest}
+                        onMarkReviewed={handleMarkReviewed}
+                    />
+                );
+            case 'gaps':
+                return (
+                    <GapAnalysis
+                        gapAnalysis={gapAnalysis}
+                        onViewRequest={handleSelectRequest}
                     />
                 );
             case 'recommendations':
                 return (
                     <AcceleratorRecommendations
                         recommendations={recommendations}
-                        onGenerate={generateRecommendations}
+                        onGenerate={() => generateRecommendationsFromGaps(gapAnalysis, data.accelerators)}
                         isLoading={isLoading}
-                        hasPatternAnalysis={!!patternAnalysis}
+                        hasPatternAnalysis={!!gapAnalysis}
                     />
                 );
             case 'analytics':

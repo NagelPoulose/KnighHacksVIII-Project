@@ -27,3 +27,10 @@ Thumbs.db
 
 # Logs
 *.log
+/node_modules
+/node_modules
+/node_modules
+/node_modules
+/node_modules
+node_modules/.bin/jsesc
+/node_modules
