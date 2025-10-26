@@ -1,10 +1,17 @@
 // AI Agents for ServiceNow Accelerator Analysis
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+
+// Initialize the Gemini AI client
+const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 class PatternAnalysisAgent {
     constructor() {
         this.name = "Pattern Analysis Agent";
         this.role = "Identify emerging customer needs and patterns from ServiceNow requests";
+        // Initialize the model
+        this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     }
 
     async analyzePatterns(customerData) {
@@ -33,6 +40,7 @@ class PatternAnalysisAgent {
 
             console.log('🔍 Pattern Analysis Agent - Starting analysis...');
             console.log('📊 Customer Data:', customerData);
+            
             const response = await this.callGoogleAI(prompt);
             console.log('🤖 Pattern Analysis Agent - Raw response:', response);
 
@@ -87,26 +95,16 @@ class PatternAnalysisAgent {
     }
 
     async callGoogleAI(prompt) {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Google AI API error: ${response.status}`);
+        try {
+            // Use the SDK's generateContent method
+            const result = await this.model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            return text;
+        } catch (error) {
+            console.error('Google AI SDK Error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
     }
 
     parseResponse(response) {
@@ -157,6 +155,8 @@ class AcceleratorRecommendationAgent {
     constructor() {
         this.name = "Accelerator Recommendation Agent";
         this.role = "Recommend new accelerators based on pattern analysis";
+        // Initialize the model
+        this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     }
 
     async recommendAccelerators(patternAnalysis, existingAccelerators) {
@@ -222,26 +222,16 @@ class AcceleratorRecommendationAgent {
     }
 
     async callGoogleAI(prompt) {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Google AI API error: ${response.status}`);
+        try {
+            // Use the SDK's generateContent method
+            const result = await this.model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            return text;
+        } catch (error) {
+            console.error('Google AI SDK Error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
     }
 
     parseRecommendations(response) {

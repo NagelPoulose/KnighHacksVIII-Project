@@ -72,6 +72,14 @@ A sophisticated AI-powered platform for analyzing customer needs and recommendin
 - The `.env` file is already in `.gitignore`
 - Use `.env.example` as a template for others
 
+### Using Google AI SDK
+
+This project uses the official **Google Generative AI SDK** for Gemini. See the complete guide in [`GOOGLE_AI_SETUP.md`](GOOGLE_AI_SETUP.md) for:
+- SDK installation and setup
+- Usage examples and patterns
+- Advanced features (streaming, function calling, etc.)
+- Error handling and troubleshooting
+
 ## 📊 Data Sources
 
 - `csv/accelerators.csv` - Existing ServiceNow accelerators
@@ -152,6 +160,3 @@ A sophisticated AI-powered platform for analyzing customer needs and recommendin
 ## 📝 License
 
 Built for ServiceNow Hackathon 2024
-=======
-# KnighHacksVIII-Project
->>>>>>> ea69c539df65231a82142c630d42b59f370949d3
