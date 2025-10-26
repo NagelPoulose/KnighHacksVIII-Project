@@ -237,10 +237,10 @@ const AcceleratorRecommendations = ({
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center"
                 >
-                    <div className="glass-effect rounded-xl p-6 max-w-md mx-auto">
-                        <Target className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-white mb-2">Pattern Analysis Required</h3>
-                        <p className="text-gray-400 text-sm">
+                    <div className="card-modern rounded-xl p-6 max-w-md mx-auto">
+                        <Target className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-primary mb-2">Pattern Analysis Required</h3>
+                        <p className="text-secondary text-sm">
                             Please run pattern analysis first to generate accelerator recommendations.
                         </p>
                     </div>
@@ -257,10 +257,10 @@ const AcceleratorRecommendations = ({
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center py-12"
                 >
-                    <div className="glass-effect rounded-xl p-8 max-w-md mx-auto">
+                    <div className="card-modern rounded-xl p-8 max-w-md mx-auto">
                         <Lightbulb className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-white mb-2">Ready to Recommend</h3>
-                        <p className="text-gray-400">
+                        <h3 className="text-xl font-semibold text-primary mb-2">Ready to Recommend</h3>
+                        <p className="text-secondary">
                             Click the button above to generate AI-powered accelerator recommendations.
                         </p>
                     </div>

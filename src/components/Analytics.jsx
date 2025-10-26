@@ -34,7 +34,7 @@ const Analytics = ({ analytics, data }) => {
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                     <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
-                    <p className="text-gray-400">Loading analytics...</p>
+                    <p className="text-secondary">Loading analytics...</p>
                 </div>
             </div>
         );

@@ -27,17 +27,17 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
             <div className="space-y-8">
                 {/* Emerging Needs */}
                 {emergingNeeds.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-modern rounded-xl p-6"
-          >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Target className="h-6 w-6 text-gray-700" />
-              </div>
-              <h3 className="text-xl font-semibold text-primary">Emerging Customer Needs</h3>
-            </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="card-modern rounded-xl p-6"
+                    >
+                        <div className="flex items-center space-x-3 mb-6">
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <Target className="h-6 w-6 text-gray-700" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-primary">Emerging Customer Needs</h3>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {emergingNeeds.map((need, index) => (
                                 <motion.div
@@ -219,23 +219,23 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                 isLoading={isLoading}
             />
 
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <div className="p-3 bg-gray-100 rounded-xl">
-            <Brain className="h-8 w-8 text-gray-700" />
-          </div>
-          <h1 className="text-4xl font-bold text-primary">Pattern Analysis</h1>
-        </div>
-        <p className="text-xl text-secondary">
-          AI-powered analysis of customer needs and emerging patterns
-        </p>
-        <div className="divider-line mt-8"></div>
-      </motion.div>
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center mb-12"
+            >
+                <div className="flex items-center justify-center space-x-3 mb-4">
+                    <div className="p-3 bg-gray-100 rounded-xl">
+                        <Brain className="h-8 w-8 text-gray-700" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-primary">Pattern Analysis</h1>
+                </div>
+                <p className="text-xl text-secondary">
+                    AI-powered analysis of customer needs and emerging patterns
+                </p>
+                <div className="divider-line mt-8"></div>
+            </motion.div>
 
             {/* Action Button */}
             <motion.div
@@ -276,10 +276,10 @@ const PatternAnalysis = ({ analysis, onRunAnalysis, isLoading, data }) => {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center py-12"
                 >
-                    <div className="glass-effect rounded-xl p-8 max-w-md mx-auto">
+                    <div className="card-modern rounded-xl p-8 max-w-md mx-auto">
                         <Brain className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-white mb-2">Ready to Analyze</h3>
-                        <p className="text-gray-400">
+                        <h3 className="text-xl font-semibold text-primary mb-2">Ready to Analyze</h3>
+                        <p className="text-secondary">
                             Click the button above to start analyzing customer patterns and emerging needs.
                         </p>
                     </div>

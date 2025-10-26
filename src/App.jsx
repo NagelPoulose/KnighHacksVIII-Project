@@ -192,11 +192,10 @@ function App() {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setCurrentView(item.id)}
-                                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                                        isActive
+                                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
                                             ? 'bg-gray-100 text-primary shadow-sm border border-gray-200'
                                             : 'text-secondary hover:bg-gray-50 hover:text-primary'
-                                    }`}
+                                        }`}
                                 >
                                     <Icon className="h-5 w-5" />
                                     <span className="font-medium">{item.label}</span>
